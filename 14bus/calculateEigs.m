@@ -1,8 +1,10 @@
 %% Script takes data and calculates Eigs
 %   More precisely, takes low rank updates and runs Arnoldi
-%   with Sherman-Morrison-Woodbury calculations to the inverse
+%   with Sherman-Morrison-Woodbury calculations 
 
-numcontigs = 6;
+%   For now uses eig, which should just be a QR iteration, 
+%   to calculate the eigenvalues. 
+load('metadata.mat');
 Adata = dlmread('data/matrix');
 A = spconvert(Adata);
 
@@ -13,5 +15,5 @@ for i = 1:numcontigs
     v = spconvert(vdata);
     n = length(A);
     [Q,H] = InvArnoldi(A,ones(n,1),n,0,u,v,sprank(u));
-    display(2*pi./imag(eig(H)));
+    
 end
