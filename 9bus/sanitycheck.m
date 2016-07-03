@@ -12,5 +12,5 @@ end
 
 data = Varout.vars(10:end,34:42);
 [length,num] = size(data);
-z = iddata(data,zeros(length,1));
+z = iddata(data,zeros(length,1),.1);
 m = n4sid(z,9,'Form','modal','DisturbanceModel','none');

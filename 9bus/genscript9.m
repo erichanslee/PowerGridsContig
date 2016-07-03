@@ -13,7 +13,6 @@
 %   and is the IEEE 9-bus system, with 6 total possible contingencies for
 %   line failure. 
 
-clear all;
 load('metadata.mat');
 filename = strcat(basefilename,'_');
 
