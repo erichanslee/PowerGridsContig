@@ -32,9 +32,15 @@ runpsat(basefilename,'data');
 runpsat('pf');
 Aoriginal = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx)- 1e-6*speye(DAE.n);
 Aoriginal(abs(Aoriginal) < 10^-10) = 0;
+A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
+
 [col,row,val] = find(Aoriginal);
 data_dump = [col,row,val];
-dlmwrite('data/matrix',data_dump,'precision',16);
+dlmwrite('data/matrixred',data_dump,'precision',16);
+
+[col,row,val] = find(A);
+data_dump = [col,row,val];
+dlmwrite('data/matrixfull',data_dump,'precision',16);
 
 %%   For each contigency i, form the state matrix As and store
 %   inside the csv named 'matrixi'. Then calculate the svd of the
@@ -48,12 +54,17 @@ for i = 1:numcontigs
     runpsat('pf');
     As = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx) - 1e-6*speye(DAE.n); 
     diff = Aoriginal - As;
+    A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
     
-    %   Write out As in a sparse format
+    %   Write out As and A in a sparse format
     [col,row,val] = find(As);
     data_dump = [col,row,val];
-    dlmwrite(strcat('data/matrix',num2str(i)),data_dump,'precision',16);
+    dlmwrite(strcat('data/matrixred',num2str(i)),data_dump,'precision',16);
     [u,d,v] = svds(diff);
+    
+    [col,row,val] = find(A);
+    data_dump = [col,row,val];
+    dlmwrite(strcat('data/matrixfull',num2str(i)),data_dump,'precision',16);
     
     %   Write out ui = u*d in a sparse format
     %   making sure it's the correct size by

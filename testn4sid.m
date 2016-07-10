@@ -1,12 +1,31 @@
+% Starting point: Discrete time system with two frequencies
 L1 = -.1 + .2*1i;
 L2 = -.2 + .4*1i;
+xi1 = exp(L1/10);
+xi2 = exp(L2/10);
 
-t = 0:.1:10; 
-x1 = 2*exp(L1*t)'+ 4*exp(L2*t)'; 
-x2 = exp(L1*t)'+4*exp(L2*t)';
-x3 = 2*exp(L1*t)'+ 2*exp(L2*t)';
-z = iddata([x1 x2 x3],zeros(length(t),1),.1);
-m = n4sid(z,3,'Form','modal','DisturbanceModel','none');    
+% Scramble A a little to make things interesting.
+[Q,~] = qr(randn(2));
+A = Q*diag([xi1, xi2])*Q';
 
-A = m.C*m.A*inv(m.C);
-[x,d] = eig(A)
+% Generate a signal
+xs = zeros(2,20);
+xs(:,1) = randn(2,1);
+for j = 2:20
+  xs(:,j) = A*xs(:,j-1);
+end
+% xs = real(xs);
+
+% Now try to identify
+u = zeros(1,20);
+z = iddata(xs', u');
+m = n4sid(z,4,'Form','modal','DisturbanceModel','none');
+[mx,md] = eigs(m.A);
+
+predvecs = normalizematrix(m.C*mx);
+fprintf('Checking that frequencies match up\n');
+display(log(diag(md)));
+display([L1 L2]);
+fprintf('Checking that eigenvalues match up\n');
+
+display(Q'*predvecs);
