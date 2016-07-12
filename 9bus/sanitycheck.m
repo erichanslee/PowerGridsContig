@@ -2,8 +2,8 @@
 
 
 clear all;
-contignum = 3;
-matrixnum = 3;
+contignum = 1;
+matrixnum = 1;
 maxfreq = .5;
 minfreq = .05;
 initpsat;
@@ -14,21 +14,25 @@ load('metadata.mat')
 Settings.freq = 60;
 Settings.fixt = 1;
 Settings.tstep = 0.05;
+offset = 50;
 
 runpsat(strcat('contig',int2str(contignum)),'data');
 runpsat('td');
 for i = 1:numbuses
 string = strcat('simulation/sim9bus' , num2str(i), '.txt');
 fid = fopen(string, 'w');
-fprintf(fid, '%f\n', Varout.vars(10:end,33+i));
+fprintf(fid, '%f\n', Varout.vars(offset:end,DAE.n + Bus.n + i));
 end
 %A = dlmread('matrix1'); A = spconvert(A); A = full(A);
+rangebus = (DAE.n + Bus.n + 1):(DAE.n + Bus.n + Bus.n);
 
 %% use n4sid
-data = Varout.vars(60:end,34:42);
+data = Varout.vars(offset:end,rangebus);
 [length,num] = size(data);
 z = iddata(data,zeros(length,1),Settings.tstep);
-m = n4sid(z, 20,'Form','modal','DisturbanceModel','none');
+% set model order
+modelorder = Bus.n*2 + 4;
+m = n4sid(z, modelorder,'Form','modal','DisturbanceModel','none');
 
 % n4sid gives discrete model with A_discrete = expm(A_cont*k)
 % where k is the sampling time. 
@@ -56,7 +60,7 @@ fprintf('Contingency %d predicted\n\n',matrixnum);
 temp1 = (diag(di));
 temp2 = (log(eig(m.A))/Settings.tstep);
 
-rangebus = (DAE.m + 1):(DAE.m + Bus.n);
+%organizing data
 rangepred = find(abs(imag(temp1)/2/pi) > .02 & abs(imag(temp1)/2/pi) <.4);  
 rangeactual = find(abs(imag(temp2)/2/pi) > .02 & abs(imag(temp2)/2/pi) <.4);
 
@@ -90,18 +94,17 @@ printnorms(closeness)
 fprintf('Checking if Frequencies Match Up....\n');
 fprintf('Predicted Frequencies from Linearized System\n');
 fprintf('\n');
-display(imag(temp1)/2/pi);
+disp(imag(temp1)/2/pi);
 fprintf('Actual Frequencies from Simulation\n');
 fprintf('\n');
-display(imag(temp2)/2/pi);
+disp(imag(temp2)/2/pi);
 
 %% Check if dampening matches
 fprintf('Checking if Dampening Matches Up....\n');
 fprintf('Predicted Frequencies from Linearized System\n');
 fprintf('\n');
-display(real(temp1));
+disp(real(temp1));
 fprintf('Actual Frequencies from Simulation\n');
 fprintf('\n');
-display(real(temp2));
-%% Check if eigenvectors match
+disp(real(temp2));
 

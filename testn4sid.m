@@ -28,4 +28,4 @@ display(log(diag(md)));
 display([L1 L2]);
 fprintf('Checking that eigenvalues match up\n');
 
-display(Q'*predvecs);
+disp(Q'*conj(predvecs));
