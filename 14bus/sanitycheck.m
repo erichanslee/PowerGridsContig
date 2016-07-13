@@ -1,9 +1,6 @@
 %% Just a check to see whether or not everything matches up
+function out = sanitycheck(contignum, matrixnum)
 
-
-clear all;
-contignum = 1;
-matrixnum = 1;
 maxfreq = .5;
 minfreq = .05;
 initpsat;
@@ -22,12 +19,6 @@ runpsat('td');
 
 differential = DAE.n;   
 algebraic = DAE.m;
-
-for i = 1:numbuses
-string = strcat('simulation/sim14bus' , num2str(i), '.txt');
-fid = fopen(string, 'w');
-fprintf(fid, '%f\n', Varout.vars(offset:end,DAE.n + Bus.n + i));
-end
 %A = dlmread('matrix1'); A = spconvert(A); A = full(A);
 rangebus = (DAE.n + Bus.n + 1):(DAE.n + Bus.n + Bus.n);
 
@@ -66,8 +57,8 @@ temp1 = (diag(di));
 temp2 = (log(eig(m.A))/Settings.tstep);
 
 %organizing data
-rangepred = find(abs(imag(temp1)/2/pi) > .02 & abs(imag(temp1)/2/pi) <.4);  
-rangeactual = find(abs(imag(temp2)/2/pi) > .02 & abs(imag(temp2)/2/pi) <.4);
+rangepred = find(abs(imag(temp1)/2/pi) > minfreq & abs(imag(temp1)/2/pi) < maxfreq);  
+rangeactual = find(abs(imag(temp2)/2/pi) > minfreq & abs(imag(temp2)/2/pi) < maxfreq);
 
 
 temp1 = temp1(rangepred);
@@ -93,7 +84,8 @@ fprintf('Checking if Eigenvectors Match up...\n');
 fprintf('Column Index = Actual Eigenvectors\n');
 fprintf('Row Index = Predicted Eigenvectors\n');
 closeness = (normalizematrix(actualvecs)'*normalizematrix(predvecs));
-printnorms(closeness)
+closeness = printnorms(closeness);
+
 
 %% Check if frequencies match
 fprintf('Checking if Frequencies Match Up....\n');
@@ -113,3 +105,31 @@ fprintf('Actual Frequencies from Simulation\n');
 fprintf('\n');
 disp(real(temp2));
 
+%% Using data to calculate measure of closeness
+[rowsize, colsize] = size(closeness);
+sum = 0;
+if(colsize > rowsize)
+    for i = 1:rowsize
+        [value, idx] = max(closeness(i,:));
+        sum = sum + value;
+        closeness(:,idx) = 0;
+    end
+elseif (colsize < rowsize)
+    for i = 1:colsize
+        [value, idx] = max(closeness(:,i));
+        sum = sum + value;
+        closeness(idx,:) = 0;
+    end
+elseif (colsize == rowsize)
+    for i = 1:colsize
+        [value, idx] = max(closeness(:,i));
+        sum = sum + value;
+        closeness(idx,:) = 0;
+    end
+else
+    error('Problem with Inner Product Size');
+end
+
+
+out = sum;
+end

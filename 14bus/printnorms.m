@@ -1,6 +1,6 @@
 %%prints the norms of a matrix entry wise
 
-function printnorms(A)
+function out = printnorms(A)
     [n,m] = size(A);
     N = zeros(n,m);
     for i = 1:n
@@ -9,5 +9,6 @@ function printnorms(A)
         end
     end
     
-    display(N);
+    disp(N);
+    out = N;
 end
