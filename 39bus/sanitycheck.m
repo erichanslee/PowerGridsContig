@@ -3,7 +3,7 @@
 % noise = white noise amount (input as percentage the max amplitude)
 % window = percentage of full view into power network
 %           implemented by randomly removing subset of voltage readings
-function [out1, out2] = sanitycheck(contignum, noise, window)
+function out = sanitycheck(contignum, noise, window)
 
 maxfreq = .5;
 minfreq = .05;
@@ -29,12 +29,6 @@ offset = 50;
 
 runpsat(strcat('contig',int2str(contignum)),'data');
 runpsat('td');
-for i = 1:numbuses
-    string = strcat('simulation/sim9bus' , num2str(i), '.txt');
-    fid = fopen(string, 'w');
-    fprintf(fid, '%f\n', Varout.vars(offset:end,DAE.n + Bus.n + i));
-    fclose('all');
-end
 
 differential = DAE.n;
 algebraic = DAE.m;
@@ -44,18 +38,18 @@ rangebus = (DAE.n + Bus.n + 1):(DAE.n + Bus.n + Bus.n);
 %% use n4sid
 data = Varout.vars(offset:end,rangebus);
 size(data)
-[len,num] = size(data);
+[length,num] = size(data);
 range = max(max(data)) - min(min(data));
 idxwindow = ceil(num*rand(1,ceil(num*window)));
 data(:,idxwindow) = 0;
 if(noise ~= 0)
-    data = data + range*noise*rand(len,num)-1/2*range*noise;
-    z = iddata(data,zeros(len,1),Settings.tstep);
+    data = data + range*noise*rand(length,num)-1/2*range*noise;
+    z = iddata(data,zeros(length,1),Settings.tstep);
     % set model order
     modelorder = Bus.n*2 + 4;
     m = n4sid(z, modelorder,'Form','modal','DisturbanceModel','estimate');
 else
-    z = iddata(data,zeros(len,1),Settings.tstep);
+    z = iddata(data,zeros(length,1),Settings.tstep);
     % set model order
     modelorder = Bus.n*2 + 4;
     m = n4sid(z, modelorder,'Form','modal','DisturbanceModel','none');
@@ -79,17 +73,16 @@ temp2 = temp2(idx2);
 actualvecs = actualvecs(:,idx2);
 
 
-out1 = zeros(1,numcontigs);
-out2 = zeros(length(temp2),numcontigs);
+out = zeros(1,numcontigs);
 for k = 1:numcontigs
     %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
     % from the reduced state matrix
     I = eye(differential);
     E = zeros(algebraic + differential);
     E(1:differential,1:differential) = I;
-    A = dlmread(strcat('data/matrixfull',int2str(k)));
-    A = full(spconvert(A));
-    [vi,di] = eig(A,E); %solve generalized eigenvalue problem
+    predA = dlmread(strcat('data/matrixfull',int2str(k)));
+    predA = full(spconvert(predA));
+    [vi,di] = eig(predA,E); %solve generalized eigenvalue problem
     
     fprintf('Contingency %d simulated\n',contignum);
     fprintf('Contingency %d predicted\n\n',k);
@@ -109,8 +102,6 @@ for k = 1:numcontigs
     %sort eigenvectors
     predvecs = vi(rangebus,rangepred); %where the important eigenvectors are
     predvecs = predvecs(:,idx1);
-    predvecsEntire = vi(:,rangepred);
-    predvecsEntire = predvecsEntire(:,idx1);
       
     format long
     %% Check if eigenvectors match
@@ -164,23 +155,6 @@ for k = 1:numcontigs
         error('Problem with Inner Product Size');
     end
     
-    out1(k) = sum;
-    
-    %% Calculate Backward Error
-    Ifull = eye(DAE.n + DAE.m);
-    order = [(DAE.n + Bus.n + 1):(DAE.n + Bus.n + Bus.n), 1:(DAE.n + Bus.n), (DAE.n + Bus.n + Bus.n + 1): (DAE.n + DAE.m)];
-    P = Ifull(order,:);
-    for j = 1:length(temp1)
-        lambda = temp1(j);
-        AP = (A - lambda*E);
-        AP = AP*P';
-        A22 = AP((Bus.n+1):end,(Bus.n+1):end);
-        rank(AP)
-        inv(A22);
-        x = predvecsEntire(:,j);
-        x(rangebus) = actualvecs(:,j);
-    end
-    
+    out(k) = sum;
 end
-
 end
