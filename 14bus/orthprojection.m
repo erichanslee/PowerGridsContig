@@ -22,7 +22,7 @@ else
     proj = zeros(size(x));
     for i = 1:len
         q = Q(:,i);
-        proj = proj + dot(x,q)*q;
+        proj = proj + dot(q,x)*q;
     end
 end
 out = x - proj;

@@ -77,10 +77,12 @@ actualvecs = m.C*mx;
 actualvecs = actualvecs(:,rangeactual);
 temp2 = temp2(idx2);
 actualvecs = actualvecs(:,idx2);
+actualvecs = normalizematrix(actualvecs);
 
 
 out1 = zeros(1,numcontigs);
 out2 = zeros(length(temp2),numcontigs);
+
 for k = 1:numcontigs
     %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
     % from the reduced state matrix
@@ -117,7 +119,7 @@ for k = 1:numcontigs
     fprintf('Checking if Eigenvectors Match up...\n');
     fprintf('Column Index = Actual Eigenvectors\n');
     fprintf('Row Index = Predicted Eigenvectors\n');
-    closeness = (normalizematrix(actualvecs)'*normalizematrix(predvecs));
+    closeness = actualvecs'*normalizematrix(predvecs);
     closeness = printnorms(closeness);
     
     
@@ -174,11 +176,13 @@ for k = 1:numcontigs
         lambda = temp1(j);
         AP = (A - lambda*E);
         AP = AP*P';
-        A22 = AP((Bus.n+1):end,(Bus.n+1):end);
-        rank(AP)
-        inv(A22);
-        x = predvecsEntire(:,j);
-        x(rangebus) = actualvecs(:,j);
+        A11 = AP(1:Bus.n,1:Bus.n); A22 = AP(z(Bus.n+1):end,(Bus.n+1):end);
+        A12 = AP(1:Bus.n,(Bus.n+1):end); A21 = AP((Bus.n+1):end,1:Bus.n);
+        AC = [A11; A21]; BD = [A12; A22];
+        res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
+        out2(j,k) = norm(res); %relative error
+%         x = predvecsEntire(:,j);
+%         x(rangebus) = actualvecs(:,j);
     end
     
 end
