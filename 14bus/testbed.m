@@ -28,7 +28,7 @@ end
 %
 Settings.freq = 60;
 Settings.fixt = 1;
-Settings.tstep = 0.1;
+Settings.tstep = 0.05;
 offset = 50;
 
 runpsat(strcat('contig',int2str(contignum)),'data');
@@ -55,7 +55,7 @@ rangerest = [1:(DAE.n + Bus.n), (DAE.n + Bus.n + Bus.n + 1): (DAE.n + DAE.m), ou
 N = length(PMU);
 
 %% use n4sid
-data = Varout.vars(offset:end,rangebus);
+data = Varout.vars(offset:end,PMU);
 size(data)
 [len,num] = size(data);
 range = max(max(data)) - min(min(data));
@@ -112,7 +112,7 @@ format long
 %% Calculate Backward Error
 out = zeros(length(temp2),1);
 Ifull = eye(DAE.n + DAE.m);
-order = [rangebus, rangerest];
+order = [PMU, rangerest];
 P = Ifull(order,:);
 for j = 1:length(temp2)
     lambda = temp2(j);

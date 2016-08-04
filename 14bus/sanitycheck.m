@@ -176,7 +176,7 @@ for k = 1:numcontigs
         lambda = temp1(j);
         AP = (A - lambda*E);
         AP = AP*P';
-        A11 = AP(1:Bus.n,1:Bus.n); A22 = AP(z(Bus.n+1):end,(Bus.n+1):end);
+        A11 = AP(1:Bus.n,1:Bus.n); A22 = AP((Bus.n+1):end,(Bus.n+1):end);
         A12 = AP(1:Bus.n,(Bus.n+1):end); A21 = AP((Bus.n+1):end,1:Bus.n);
         AC = [A11; A21]; BD = [A12; A22];
         res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
