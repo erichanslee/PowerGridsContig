@@ -141,20 +141,26 @@ for k = 1:numcontigs
     order = [PMU, rangerest];
     P = Ifull(order,:);
     for j = 1:length(temp2)
+        
+        % Form the shifted matrix
         lambda = temp2(j);
-        AP = (A - lambda*E);
-        AP = AP*P';
-        A11 = AP(1:N,1:N); A22 = AP((N+1):end,(N+1):end);
-        A12 = AP(1:N,(N+1):end); A21 = AP((N+1):end,1:N);
-        AC = [A11; A21]; BD = [A12; A22];
-        res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
-        out(j) = norm(res); %relative error
-        %         x = predvecsEntire(:,j);
-        %         x(rangebus) = actualvecs(:,j);
+        Ashift = A-lambda*E;
+        
+        % Solve an OLS problem to fill in unknown entries (min residual)
+        xfull = zeros(DAE.n + DAE.m, 1);
+        xfull(PMU) = actualvecs(:,j);
+        xfull(rangerest) = Ashift(:,rangerest)\(Ashift(:,PMU)*xfull(PMU));
+        
+        % Compute the residual and save the norm
+        res = Ashift*xfull;
+        out(j) = norm(res);
+        
     end
     data_dump(k) = mean(out);
+    
 end
-
 [~, idx] = min(data_dump);
 predcontig = idx;
+
+
 end
