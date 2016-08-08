@@ -114,6 +114,7 @@ out = zeros(length(temp2),1);
 Ifull = eye(DAE.n + DAE.m);
 order = [PMU, rangerest];
 P = Ifull(order,:);
+%{
 for j = 1:length(temp2)
     lambda = temp2(j);
     AP = (A - lambda*E);
@@ -126,6 +127,23 @@ for j = 1:length(temp2)
     %         x = predvecsEntire(:,j);
     %         x(rangebus) = actualvecs(:,j);
 end
+%}
 
+for j = 1:length(temp2)
+
+  % Form the shifted matrix
+  lambda = temp2(j);
+  Ashift = A-lambda*E;
+
+  % Solve an OLS problem to fill in unknown entries (min residual)
+  xfull = zeros(DAE.n + DAE.m, 1);
+  xfull(PMU) = actualvecs(:,j);
+  xfull(rangerest) = Ashift(:,rangerest)\(Ashift(:,PMU)*xfull(PMU));
+
+  % Compute the residual and save the norm
+  res = Ashift*xfull;
+  out(j) = norm(res);
+
+end
 
 end
