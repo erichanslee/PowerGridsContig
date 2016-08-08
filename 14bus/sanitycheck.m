@@ -1,3 +1,6 @@
+%%%% ~~~~~~~~~~NEEDS FIXING~~~~~~~~~~~~~~~
+
+
 %% Checks whether or not contingency matches reduced state matrix modes
 % contignum = the contingency to simulate
 % noise = white noise amount (input as percentage the max amplitude)

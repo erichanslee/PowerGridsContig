@@ -3,13 +3,16 @@
 % noise = white noise amount (input as percentage the max amplitude)
 % window = percentage of full view into power network
 %           implemented by randomly removing subset of voltage readings
-function [out] = testbed(contignum, matrixnum, noise, window)
-k = matrixnum;
+function [predcontig, actualcontig] = testbed(noise, window)
+
+
+
 maxfreq = .5;
 minfreq = .05;
 initpsat;
 load('metadata.mat')
-
+contignum = ceil(numcontigs*rand);
+actualcontig = contignum;
 %% Basic Pre-Run Checks
 if(noise > 1 || noise < 0)
     error('Problems with parameter "Noise". Please enter in a real number in the range of [0,1]')
@@ -77,8 +80,6 @@ end
 
 %%  Print some more stuff
 clc;
-fprintf('Contingency %d simulated\n',contignum);
-fprintf('Contingency %d predicted\n\n',k);
 
 %% Calculate Eigenvalue and Eigenvector Predictions from N4SID
 
@@ -93,39 +94,67 @@ temp2 = temp2(idx2);
 actualvecs = actualvecs(:,idx2);
 actualvecs = normalizematrix(actualvecs);
 
-
-
-
-
+data_dump = zeros(1,numcontigs);
 %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
 % from the reduced state matrix
 I = eye(differential);
 E = zeros(algebraic + differential);
 E(1:differential,1:differential) = I;
-A = dlmread(strcat('data/matrixfull',int2str(k)));
+A = dlmread(strcat('data/matrixfull',int2str(contignum)));
 A = full(spconvert(A));
+[vi,di] = eig(A,E); %solve generalized eigenvalue problem
 
+%% Sort and organize data from State Matrix properly
+% actual = from system identification
+% pred = from linearized system
+temp1 = (diag(di));
+rangepred = find(abs(imag(temp1)/2/pi) > minfreq & abs(imag(temp1)/2/pi) < maxfreq);
+temp1 = temp1(rangepred);
+[~, idx1] = sort(abs(imag(temp1)));
 
+%sort eigenvalues
+temp1 = temp1(idx1);
 
-format long
+%sort eigenvectors
+predvecs = vi(rangebus,rangepred); %where the important eigenvectors are
+predvecs = predvecs(:,idx1);
+predvecsEntire = vi(:,rangepred);
+predvecsEntire = predvecsEntire(:,idx1);
 
-%% Calculate Backward Error
-out = zeros(length(temp2),1);
-Ifull = eye(DAE.n + DAE.m);
-order = [PMU, rangerest];
-P = Ifull(order,:);
-for j = 1:length(temp2)
-    lambda = temp2(j);
-    AP = (A - lambda*E);
-    AP = AP*P';
-    A11 = AP(1:N,1:N); A22 = AP((N+1):end,(N+1):end);
-    A12 = AP(1:N,(N+1):end); A21 = AP((N+1):end,1:N);
-    AC = [A11; A21]; BD = [A12; A22];
-    res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
-    out(j) = norm(res); %relative error
-    %         x = predvecsEntire(:,j);
-    %         x(rangebus) = actualvecs(:,j);
+for k = 1:numcontigs
+    
+    %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
+    % from the reduced state matrix
+    I = eye(differential);
+    E = zeros(algebraic + differential);
+    E(1:differential,1:differential) = I;
+    A = dlmread(strcat('data/matrixfull',int2str(k)));
+    A = full(spconvert(A));
+    
+    
+    
+    format long
+    
+    %% Calculate Backward Error
+    out = zeros(length(temp2),1);
+    Ifull = eye(DAE.n + DAE.m);
+    order = [PMU, rangerest];
+    P = Ifull(order,:);
+    for j = 1:length(temp2)
+        lambda = temp2(j);
+        AP = (A - lambda*E);
+        AP = AP*P';
+        A11 = AP(1:N,1:N); A22 = AP((N+1):end,(N+1):end);
+        A12 = AP(1:N,(N+1):end); A21 = AP((N+1):end,1:N);
+        AC = [A11; A21]; BD = [A12; A22];
+        res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
+        out(j) = norm(res); %relative error
+        %         x = predvecsEntire(:,j);
+        %         x(rangebus) = actualvecs(:,j);
+    end
+    data_dump(k) = mean(out);
 end
 
-
+[~, idx] = min(data_dump);
+predcontig = idx;
 end
