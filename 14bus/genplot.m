@@ -1,16 +1,23 @@
-function out = genplot(numtrials, noise, window)
+function [out,confidence] = genplot(numtrials, noise, window)
 load metadata.mat
 
 %%  Case with full PMU
 M = zeros(numcontigs);
+C = zeros(1,numtrials);
+counter = 1;
 for n = 1:numtrials
-    [i,j] = testbed(noise, window);
+    [i,j,con] = testbed3(noise, window);
     M(i,j) = M(i,j) + 1;
+    
+    if(i == j)
+        C(counter) = con;
+        counter = counter + 1;
+    end
 end
 
 
 out = M;
-
+confidence = C;
 figure 
 imagesc(M);
 colormap(bone);

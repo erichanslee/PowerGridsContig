@@ -132,22 +132,35 @@ predvecsEntire = predvecsEntire(:,idx1);
 format long
 
 %% Calculate Backward Error
-out = zeros(length(temp1),1);
 Ifull = eye(DAE.n + DAE.m);
-order = [rangebus, rangerest];
+order = [PMU, rangerest];
 P = Ifull(order,:);
-for j = 1:length(temp1)
-    lambda = temp1(j);
-    AP = (A - lambda*E);
-    AP = AP*P';
-    A11 = AP(1:N,1:N); A22 = AP((N+1):end,(N+1):end);
-    A12 = AP(1:N,(N+1):end); A21 = AP((N+1):end,1:N);
-    AC = [A11; A21]; BD = [A12; A22];
-    res = orthprojection(AC*actualvecs(:,j),-1*BD,0);
-    out(j) = norm(res); %relative error
-    %         x = predvecsEntire(:,j);
-    %         x(rangebus) = actualvecs(:,j);
+out = zeros(length(temp2),1);
+for j = 1:length(temp2)
+    
+    % Form the shifted matrix
+    lambda = temp2(j);
+    Ashift = (A-lambda*E)*P';
+    
+    % Form Gramian
+    T = zeros(DAE.n + DAE.m,1+length(rangerest));
+    T(1:length(PMU),1) = actualvecs(:,j);
+    T((length(PMU)+1):end,2:end) = eye(length(rangerest));
+    G = T'*(Ashift'*Ashift)*T;
+    
+    % Calculate smallest eigenvector and then form eigenvector
+    [~,ds] = digs(G,1,'sm');
+    xfull = zeros(DAE,n + DAE.m,1);
+    xfull(1:length(PMU)) = ds(1)*actualvecs(:,j);
+    xfull((length(PMU)+1):end) = ds(2:end);
+    
+    
+    % Compute the residual and save the norm
+    res = Ashift*xfull;
+    out(j) = norm(res);
+    
 end
+display(out);
 
 
 end

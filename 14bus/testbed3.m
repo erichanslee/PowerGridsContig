@@ -1,6 +1,9 @@
-%  Checks data from contingency identification routine on a cases-by-case
-%   basis for debugging purposes.
-function isolatecase(method,contignum, matrixnum, noise, window)
+%% Checks whether or not contingency matches reduced state matrix modes
+% contignum = the contingency to simulate
+% noise = white noise amount (input as percentage the max amplitude)
+% window = percentage of full view into power network
+%           implemented by randomly removing subset of voltage readings
+function [predcontig, actualcontig, confidence] = testbed3(noise, window)
 
 
 
@@ -8,12 +11,10 @@ maxfreq = .5;
 minfreq = .05;
 initpsat;
 load('metadata.mat')
+contignum = ceil(numcontigs*rand);
+actualcontig = contignum;
 
 %% Basic Pre-Run Checks
-if(method > 3 || method < 1)
-    error('Problems with parameter "Noise". Please an integer in [1,3]')
-end
-
 if(noise > 1 || noise < 0)
     error('Problems with parameter "Noise". Please enter in a real number in the range of [0,1]')
 end
@@ -77,6 +78,7 @@ end
 % n4sid gives discrete model with A_discrete = expm(A_cont*k)
 % where k is the sampling time.
 
+clc;
 
 %% Calculate Eigenvalue and Eigenvector Predictions from N4SID
 
@@ -118,93 +120,56 @@ predvecs = predvecs(:,idx1);
 predvecsEntire = vi(:,rangepred);
 predvecsEntire = predvecsEntire(:,idx1);
 
-k = matrixnum;
-
-%% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
-% from the reduced state matrix
-I = eye(differential);
-E = zeros(algebraic + differential);
-E(1:differential,1:differential) = I;
-A = dlmread(strcat('data/matrixfull',int2str(k)));
-A = full(spconvert(A));
-
-
-
-format long
-
-%% Calculate Backward Error
-Ifull = eye(DAE.n + DAE.m);
-order = [PMU, rangerest];
-P = Ifull(order,:);
-out = zeros(length(temp2),1);
-
-for j = 1:length(temp2)
-    switch method
-        case 1	%% METHOD 1
-            % Form the shifted matrix
-            lambda = temp2(j);
-            Ashift = A-lambda*E;
-            
-            % Solve an OLS problem to fill in unknown entries (min residual)
-            xfull1 = zeros(DAE.n + DAE.m, 1);
-            xfull1(PMU) = actualvecs(:,j);
-            xfull1(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull1(PMU));
-            
-            % Compute the residual and save the norm
-            res = Ashift*xfull1;
-            out(j) = norm(res);
-            
-
-        case 2	%% METHOD 2
-            % Form the shifted matrix
-            lambda = temp2(j);
-            Ashift = A-lambda*E;
-            
-            % Solve an OLS problem to fill in unknown entries (min residual)
-            xfull2 = zeros(DAE.n + DAE.m, 1);
-            xfull2(PMU) = actualvecs(:,j);
-            xfull2(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull2(PMU));
-            
-            % Compute the residual and save the norm
-            xfull2 = xfull2/norm(xfull2);
-            res = Ashift*xfull2;
-            out(j) = norm(res);
-            
-
-        case 3  %% METHOD 3
-            % Form the shifted matrix
-            lambda = temp2(j);
-            Ashift = (A-lambda*E)*P';
-            
-            % Form Gramian
-            T = zeros(DAE.n + DAE.m,1+length(rangerest));
-            T(1:length(PMU),1) = actualvecs(:,j);
-            T((length(PMU)+1):end,2:end) = eye(length(rangerest));
-            G = T'*(Ashift'*Ashift)*T;
-            
-            % Calculate smallest eigenvector and then form eigenvector
-            [vs,ds] = eigs(G,1,'sm');
-            xfull3 = zeros(DAE.n + DAE.m,1);
-            xfull3(1:length(PMU)) = vs(1)*actualvecs(:,j);
-            xfull3((length(PMU)+1):end) = vs(2:end);
-            
-            % Compute the residual and save the norm
-            res = Ashift*xfull3;
-            out(j) = norm(res);
+for k = 1:numcontigs
+    
+    %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
+    % from the reduced state matrix
+    I = eye(differential);
+    E = zeros(algebraic + differential);
+    E(1:differential,1:differential) = I;
+    A = dlmread(strcat('data/matrixfull',int2str(k)));
+    A = full(spconvert(A));
+    
+    
+    
+    format long
+    
+    %% Calculate Backward Error
+    Ifull = eye(DAE.n + DAE.m);
+    order = [PMU, rangerest];
+    P = Ifull(order,:);
+    out = zeros(length(temp2),1);
+    for j = 1:length(temp2)
+        
+        % Form the shifted matrix
+        lambda = temp2(j);
+        Ashift = (A-lambda*E)*P';
+        
+        % Form Gramian
+        T = zeros(DAE.n + DAE.m,1+length(rangerest));
+        T(1:length(PMU),1) = actualvecs(:,j);
+        T((length(PMU)+1):end,2:end) = eye(length(rangerest));
+        G = T'*(Ashift'*Ashift)*T;
+        
+        % Calculate smallest eigenvector and then form eigenvector
+        [vs,~] = eigs(G,1,'sm');
+        xfull = zeros(DAE.n + DAE.m,1);
+        xfull(1:length(PMU)) = vs(1)*actualvecs(:,j);
+        xfull((length(PMU)+1):end) = vs(2:end);
+        
+        
+        % Compute the residual and save the norm
+        res = Ashift*xfull;
+        out(j) = norm(res);
+        
     end
-    %% Compare and Contrast
-    display('First Method:')
-    display(norm(xfull1(PMU))/norm(xfull1(rangerest)));
-    display('Second Method:')
-    display(norm(xfull2(PMU))/norm(xfull2(rangerest)));
-    display('Third Method:')
-    display(norm(xfull3(1:length(PMU)))/norm(xfull3((length(PMU)+1):end)));
+    data_dump(k) = mean(out);
+    
 end
-
-display('done');
-
-
-
-
+[val1, idx1] = min(data_dump);
+data_dump(idx1) = [];
+[val2, ~] = min(data_dump);
+predcontig = idx1;
+confidence = abs(val2 - val1)/abs(val1);
 
 end
