@@ -1,6 +1,6 @@
 %  Checks data from contingency identification routine on a cases-by-case
 %   basis for debugging purposes.
-function isolatecase2(contignum, matrixnum, noise, window)
+function [proportion] = isolatecase2(contignum, matrixnum, noise, window)
 
 
 

@@ -3,7 +3,7 @@
 % noise = white noise amount (input as percentage the max amplitude)
 % window = percentage of full view into power network
 %           implemented by randomly removing subset of voltage readings
-function [predcontig, actualcontig, confidence] = testbed(noise, window)
+function [predcontig, actualcontig, confidence, proportion] = testbed(method, noise, window)
 
 
 
@@ -13,8 +13,12 @@ initpsat;
 load('metadata.mat')
 contignum = ceil(numcontigs*rand);
 actualcontig = contignum;
-
 %% Basic Pre-Run Checks
+
+if(method > 4 || method < 1)
+    error('Problems with parameter "Noise". Please an integer in [1,3]')
+end
+
 if(noise > 1 || noise < 0)
     error('Problems with parameter "Noise". Please enter in a real number in the range of [0,1]')
 end
@@ -141,26 +145,81 @@ for k = 1:numcontigs
     out = zeros(length(temp2),1);
     for j = 1:length(temp2)
         
-        % Form the shifted matrix
-        lambda = temp2(j);
-        Ashift = (A-lambda*E)*P';
-        
-        % Form Gramian
-        T = zeros(DAE.n + DAE.m,1+length(rangerest));
-        T(1:length(PMU),1) = actualvecs(:,j);
-        T((length(PMU)+1):end,2:end) = eye(length(rangerest));
-        G = T'*(Ashift'*Ashift)*T;
-        
-        % Calculate smallest eigenvector and then form eigenvector
-        [vs,~] = eigs(G,1,'sm');
-        xfull = zeros(DAE.n + DAE.m,1);
-        xfull(1:length(PMU)) = vs(1)*actualvecs(:,j);
-        xfull((length(PMU)+1):end) = vs(2:end);
-        
-        
-        % Compute the residual and save the norm
-        res = Ashift*xfull;
-        out(j) = norm(res);
+        switch method
+            case 1	%% METHOD 1
+                % Form the shifted matrix
+                lambda = temp2(j);
+                Ashift = A-lambda*E;
+                
+                % Solve an OLS problem to fill in unknown entries (min residual)
+                xfull1 = zeros(DAE.n + DAE.m, 1);
+                xfull1(PMU) = actualvecs(:,j);
+                xfull1(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull1(PMU));
+                
+                % Compute the residual and save the norm
+                res = Ashift*xfull1;
+                out(j) = norm(res);
+                
+                
+            case 2	%% METHOD 2
+                % Form the shifted matrix
+                lambda = temp2(j);
+                Ashift = A-lambda*E;
+                
+                % Solve an OLS problem to fill in unknown entries (min residual)
+                xfull2 = zeros(DAE.n + DAE.m, 1);
+                xfull2(PMU) = actualvecs(:,j);
+                xfull2(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull2(PMU));
+                
+                % Compute the residual and save the norm
+                xfull2 = xfull2/norm(xfull2);
+                res = Ashift*xfull2;
+                out(j) = norm(res);
+                
+                
+            case 3  %% METHOD 3
+                % Form the shifted matrix
+                lambda = temp2(j);
+                Ashift = (A-lambda*E)*P';
+                
+                % Form Gramian
+                T = zeros(DAE.n + DAE.m,1+length(rangerest));
+                T(1:length(PMU),1) = actualvecs(:,j);
+                T((length(PMU)+1):end,2:end) = eye(length(rangerest));
+                G = T'*(Ashift'*Ashift)*T;
+                
+                % Calculate smallest eigenvector and then form eigenvector
+                [vs,ds] = eigs(G,1,'sm');
+                xfull3 = zeros(DAE.n + DAE.m,1);
+                xfull3(1:length(PMU)) = vs(1)*actualvecs(:,j);
+                xfull3((length(PMU)+1):end) = vs(2:end);
+                
+                % Compute the residual and save the norm
+                res = Ashift*xfull3;
+                out(j) = norm(res);
+                
+            case 4  %% METHOD 4: Making x1 unit lengh again
+                % Form the shifted matrix
+                lambda = temp2(j);
+                Ashift = (A-lambda*E)*P';
+                
+                % Form Gramian
+                T = zeros(DAE.n + DAE.m,1+length(rangerest));
+                T(1:length(PMU),1) = actualvecs(:,j);
+                T((length(PMU)+1):end,2:end) = eye(length(rangerest));
+                G = T'*(Ashift'*Ashift)*T;
+                
+                % Calculate smallest eigenvector and then form eigenvector
+                [vs,ds] = eigs(G,1,'sm');
+                xfull3 = zeros(DAE.n + DAE.m,1);
+                xfull3(1:length(PMU)) = vs(1)*actualvecs(:,j);
+                xfull3((length(PMU)+1):end) = vs(2:end);
+                
+                % Compute the residual, renormalize x1 to have unit length
+                % and save the norm
+                res = 1/vs(1)*Ashift*xfull3;
+                out(j) = norm(res);
+        end
         
     end
     data_dump(k) = mean(out);

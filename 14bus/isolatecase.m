@@ -1,6 +1,6 @@
 %  Checks data from contingency identification routine on a cases-by-case
 %   basis for debugging purposes.
-function isolatecase(method,contignum, matrixnum, noise, window)
+function [proportion] = isolatecase(method,contignum, matrixnum, noise, window)
 
 
 
@@ -10,8 +10,8 @@ initpsat;
 load('metadata.mat')
 
 %% Basic Pre-Run Checks
-if(method > 3 || method < 1)
-    error('Problems with parameter "Noise". Please an integer in [1,3]')
+if(method > 5 || method < 1)
+    error('Problems with parameter "Method". Please an integer in [1,3]')
 end
 
 if(noise > 1 || noise < 0)
@@ -137,7 +137,7 @@ Ifull = eye(DAE.n + DAE.m);
 order = [PMU, rangerest];
 P = Ifull(order,:);
 out = zeros(length(temp2),1);
-
+proportion = ones(1,length(temp2));
 for j = 1:length(temp2)
     switch method
         case 1	%% METHOD 1
@@ -153,8 +153,8 @@ for j = 1:length(temp2)
             % Compute the residual and save the norm
             res = Ashift*xfull1;
             out(j) = norm(res);
+            proportion(j) = norm(xfull1(PMU))/norm(xfull1);
             
-
         case 2	%% METHOD 2
             % Form the shifted matrix
             lambda = temp2(j);
@@ -168,9 +168,9 @@ for j = 1:length(temp2)
             % Compute the residual and save the norm
             xfull2 = xfull2/norm(xfull2);
             res = Ashift*xfull2;
-            out(j) = norm(res);
+            out(j) = norm(res); 
+            proportion(j) = norm(xfull2(PMU));
             
-
         case 3  %% METHOD 3
             % Form the shifted matrix
             lambda = temp2(j);
@@ -191,14 +191,37 @@ for j = 1:length(temp2)
             % Compute the residual and save the norm
             res = Ashift*xfull3;
             out(j) = norm(res);
+            proportion(j) = abs(vs(1));
+            
+        case 4  %% METHOD 4: Making x1 unit lengh again
+            % Form the shifted matrix
+            lambda = temp2(j);
+            Ashift = (A-lambda*E)*P';
+            
+            % Form Gramian
+            T = zeros(DAE.n + DAE.m,1+length(rangerest));
+            T(1:length(PMU),1) = actualvecs(:,j);
+            T((length(PMU)+1):end,2:end) = eye(length(rangerest));
+            G = T'*(Ashift'*Ashift)*T;
+            
+            % Calculate smallest eigenvector and then form eigenvector
+            [vs,ds] = eigs(G,1,'sm');
+            xfull3 = zeros(DAE.n + DAE.m,1);
+            xfull3(1:length(PMU)) = vs(1)*actualvecs(:,j);
+            xfull3((length(PMU)+1):end) = vs(2:end);
+            
+            % Compute the residual, renormalize x1 to have unit length
+            % and save the norm
+            res = 1/vs(1)*Ashift*xfull3;
+            out(j) = norm(res);
+            proportion(j) = abs(vs(1));
+        
+        case 5 %% Not a Method, simply checking theoretical eigenvectors
+            
+            proportion(j) = norm(predvecs(:,j))/norm(predvecsEntire(:,j));
     end
-    %% Compare and Contrast
-    display('First Method:')
-    display(norm(xfull1(PMU))/norm(xfull1(rangerest)));
-    display('Second Method:')
-    display(norm(xfull2(PMU))/norm(xfull2(rangerest)));
-    display('Third Method:')
-    display(norm(xfull3(1:length(PMU)))/norm(xfull3((length(PMU)+1):end)));
+
+    
 end
 
 display('done');
