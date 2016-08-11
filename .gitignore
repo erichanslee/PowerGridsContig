@@ -2,6 +2,8 @@
 14bus/data/matri*
 14bus/data/u*
 14bus/simulation/*.txt
+14bus/simulation/*.mat
+9bus/simulation/*.mat
 9bus/data/v*
 9bus/data/matri*
 9bus/data/u*
