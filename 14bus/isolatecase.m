@@ -1,5 +1,18 @@
-%  Checks data from contingency identification routine on a cases-by-case
-%   basis for debugging purposes.
+% isolatecase is an auxillary function for debugging purposes that checks
+% runs a time-domain simulation for contingency <contignum> and then
+% calculates residuals for the linearized system <matrixnum>
+
+% That is, it checks data from contingency identification routine on a
+% cases-by-case basis for debugging purposes.
+
+% ~~~~~~~~~INPUTS~~~~~~~~~ %
+
+% method = method type number one would like to use
+% contignum = contingency to simulate
+% matrixnum = linearized system to use for residual calculation
+% noise = percentage of max amplitude to add as gaussian noise
+% window = percentage of PMUs visible
+
 function [proportion] = isolatecase(method,contignum, matrixnum, noise, window)
 
 
@@ -156,19 +169,17 @@ for j = 1:length(temp2)
             proportion(j) = norm(xfull1(PMU))/norm(xfull1);
             
         case 2	%% METHOD 2
-            % Form the shifted matrix
             lambda = temp2(j);
             Ashift = A-lambda*E;
             
-            % Solve an OLS problem to fill in unknown entries (min residual)
             xfull2 = zeros(DAE.n + DAE.m, 1);
             xfull2(PMU) = actualvecs(:,j);
             xfull2(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull2(PMU));
             
-            % Compute the residual and save the norm
+            % Normalize as well
             xfull2 = xfull2/norm(xfull2);
             res = Ashift*xfull2;
-            out(j) = norm(res); 
+            out(j) = norm(res);
             proportion(j) = norm(xfull2(PMU));
             
         case 3  %% METHOD 3
@@ -192,6 +203,8 @@ for j = 1:length(temp2)
             res = Ashift*xfull3;
             out(j) = norm(res);
             proportion(j) = abs(vs(1));
+            % ~~~Note~~~: could easily just use eigenvalue as output
+            % but we want the full eigenvector for debugging purposes
             
         case 4  %% METHOD 4: Making x1 unit lengh again
             % Form the shifted matrix
@@ -215,12 +228,12 @@ for j = 1:length(temp2)
             res = 1/vs(1)*Ashift*xfull3;
             out(j) = norm(res);
             proportion(j) = abs(vs(1));
-        
+            
         case 5 %% Not a Method, simply checking theoretical eigenvectors
             
             proportion(j) = norm(predvecs(:,j))/norm(predvecsEntire(:,j));
     end
-
+    
     
 end
 

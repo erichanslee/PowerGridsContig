@@ -1,9 +1,19 @@
-%% Checks whether or not contingency matches reduced state matrix modes
-% contignum = the contingency to simulate
-% noise = white noise amount (input as percentage the max amplitude)
-% window = percentage of full view into power network
-%           implemented by randomly removing subset of voltage readings
-function [predcontig, actualcontig, confidence, proportion] = testbed(method, noise, window)
+%% Testbed runs a "simulation" of a random contingency
+% and then checks whether or not we can identify it
+
+% ~~~~~~~~~INPUTS~~~~~~~~~ %
+
+% method = method type number one would like to use
+% noise = percentage of max amplitude to add as gaussian noise
+% window = percentage of PMUs visible
+
+% ~~~~~~~~~OUTPUTS~~~~~~~~~ %
+
+% predcontig = the cotingency the chosen method predicts
+% actualcontig = the contingency that was actually simulated
+% confidence = the confidence levels for correctly identified contigs
+
+function [predcontig, actualcontig, confidence] = testbed(method, noise, window)
 
 
 
@@ -195,8 +205,11 @@ for k = 1:numcontigs
                 xfull3((length(PMU)+1):end) = vs(2:end);
                 
                 % Compute the residual and save the norm
+                
                 res = Ashift*xfull3;
                 out(j) = norm(res);
+                % Note: could easily just use eigenvalue as output
+                % but we want the full eigenvector for debugging purposes
                 
             case 4  %% METHOD 4: Making x1 unit lengh again
                 % Form the shifted matrix
