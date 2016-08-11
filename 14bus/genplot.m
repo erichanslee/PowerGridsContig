@@ -14,7 +14,7 @@
 % confidence = array of confidence measures from each
 %               trial instance
 
-function [out,confidence] = genplot(method,numtrials, noise, window)
+function [out,confidence] = genplot(method, numtrials, noise, window)
 load metadata.mat
 
 %   temp variables
@@ -35,12 +35,4 @@ end
 out = M;
 confidence = C;
 
-% generate image/plot
-figure
-imagesc(normalizematrix(-1*M));
-colormap(bone);
-set(gca,'XTick',[]); % Remove the ticks in the x axis!
-set(gca,'YTick',[]); % Remove the ticks in the y axis
-set(gca,'Position',[0 0 1 1]); % Make the axes occupy the hole figure
-saveas(gcf,'results14bus','png');
 

@@ -15,17 +15,16 @@
 
 function [predcontig, actualcontig, confidence] = testbed(method, noise, window)
 
-
-
 maxfreq = .5;
 minfreq = .05;
 initpsat;
 load('metadata.mat')
 contignum = ceil(numcontigs*rand);
 actualcontig = contignum;
+
 %% Basic Pre-Run Checks
 
-if(method > 4 || method < 1)
+if(method > 5 || method < 1)
     error('Problems with parameter "Noise". Please an integer in [1,3]')
 end
 
@@ -60,7 +59,6 @@ end
 
 differential = DAE.n;
 algebraic = DAE.m;
-%A = dlmread('matrix1'); A = spconvert(A); A = full(A);
 
 %%  Simulate Partial Placement of PMUs by obscuring percentage of simulated data
 
@@ -232,6 +230,10 @@ for k = 1:numcontigs
                 % and save the norm
                 res = 1/vs(1)*Ashift*xfull3;
                 out(j) = norm(res);
+                
+            case 5 %% Not a Method, simply checking theoretical eigenvectors
+                
+                out(j) = norm(predvecs(:,j))/norm(predvecsEntire(:,j));
         end
         
     end

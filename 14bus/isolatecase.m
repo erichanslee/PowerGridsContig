@@ -36,7 +36,7 @@ if(window > 1 || window < 0)
 end
 
 if(contignum > numcontigs)
-    error('Contigency Number not found!')
+    error('Contigency Number not found! Please enter a smaller integer')
 end
 
 %% run simulation, generate data
@@ -150,7 +150,10 @@ Ifull = eye(DAE.n + DAE.m);
 order = [PMU, rangerest];
 P = Ifull(order,:);
 out = zeros(length(temp2),1);
-proportion = ones(1,length(temp2));
+proportion = zeros(1,length(temp2));
+if( length(temp2) ~= length(temp1) && method == 5)
+    return
+end
 for j = 1:length(temp2)
     switch method
         case 1	%% METHOD 1
