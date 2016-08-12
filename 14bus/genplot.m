@@ -15,24 +15,25 @@
 %               trial instance
 
 function [out,confidence] = genplot(method, numtrials, noise, window)
-load metadata.mat
 
-%   temp variables
-M = zeros(numcontigs);
-C = zeros(1,numtrials);
-counter = 1;
+  load metadata.mat
 
-for n = 1:numtrials
+  %   temp variables
+  M = zeros(numcontigs);
+  C = zeros(1,numtrials);
+  counter = 1;
+
+  for n = 1:numtrials
     [i,j,con] = testbed(method, noise, window);
     M(i,j) = M(i,j) + 1;
     if(i == j)
-        C(counter) = con;
-        counter = counter + 1;
+      C(counter) = con;
+      counter = counter + 1;
     end
+  end
+
+  % set outputs
+  out = M;
+  confidence = C;
+
 end
-
-% set outputs
-out = M;
-confidence = C;
-
-

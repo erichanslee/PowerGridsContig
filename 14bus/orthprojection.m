@@ -8,22 +8,22 @@
 %   out = projection residual
 
 function out = orthprojection(x,A,mode)
-if(mode == 1)
+  if(mode == 1)
     Q = A;
     [~,len] = size(Q);
     proj = zeros(size(x));
     for i = 1:len
-        q = Q(:,i);
-        proj = proj + dot(x,q)*q;
+      q = Q(:,i);
+      proj = proj + dot(x,q)*q;
     end
-else
+  else
     Q = orth(A);
     [~,len] = size(Q);
     proj = zeros(size(x));
     for i = 1:len
-        q = Q(:,i);
-        proj = proj + dot(q,x)*q;
+      q = Q(:,i);
+      proj = proj + dot(q,x)*q;
     end
-end
-out = x - proj;
+  end
+  out = x - proj;
 end

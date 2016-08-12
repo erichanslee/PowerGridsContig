@@ -1,10 +1,7 @@
+% [out] = normalizematrix(A)
+%
+% Scale matrix columns to unit two-norm.
+%
 function out = normalizematrix(A)
-%% function just takes a matrix and normalizes each column. 
-
-[~,width] = size(A);
-for i = 1:width
-   A(:,i) = A(:,i)/norm(A(:,i)); 
-end
-
-out = A;
+  out = bsxfun(@rdivide, A, sqrt(sum(A.^2)));
 end
