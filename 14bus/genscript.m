@@ -20,7 +20,6 @@ function genscript(basename, numbuses, numcontigs)
   % Compute full and redued Jacobians for base case and write to file
   % DSB: Why do we trim tiny elements here and not below?
   [A, Aoriginal] = jacobian(basename);
-  Aoriginal = trim_tiny(Aoriginal);
   matrix_write('data/matrixfull', A);
   matrix_write('data/matrixred', Aoriginal);
 
@@ -71,13 +70,10 @@ end
 % ------------------------------------------------------
 % Run PSAT power flow to get full and reduced Jacobian matrices
 %
-% DSB: Why are we subtracting 1e-6*I?  For that matter, why are
-%      we explicitly forming the Schur complement at all?
-%
 function [A, Ared] = jacobian(fname)
   initpsat;
   runpsat(fname, 'data');
   runpsat('pf');
   A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
-  Ared = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx)- 1e-6*speye(DAE.n);
+  Ared = trim_tiny(DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx));
 end
