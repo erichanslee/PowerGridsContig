@@ -5,9 +5,11 @@
 %   contig*.m    - PSAT files for the contingency systems
 %   metadata.mat - Specify params for 14 bus case
 %
-% Static analysis:
-%   genscript   - Generate data/ submatrix with power flow Jacobians
-%   genscript14 - Call genscript with inputs for the 14-bus system
+% PSAT analysis:
+%   genscript      - Generate data/ submatrix with power flow Jacobians
+%   genscript14    - Call genscript with inputs for the 14-bus system
+%   psat_runtrial  - Run PSAT sim and save results to .mat file
+%   psat_runtrials - Run PSAT sims for every contingency
 %
 % Helper functions:
 %   normalizematrix - Scale matrix columns to unit norm
