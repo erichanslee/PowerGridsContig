@@ -10,7 +10,6 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
 
   maxfreq = .5;
   minfreq = .05;
-  initpsat;
   load('metadata.mat')
 
   %% Basic Pre-Run Checks
@@ -25,20 +24,8 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
   %% run simulation, generate data
   % at 60hz with fixed timesteps of 0.05s, simulating 20 polls/second on PMU
   %
-  Settings.freq = 60;
-  Settings.fixt = 1;
-  Settings.tstep = 0.05;
   offset = 50;
-
-  runpsat(strcat('contig',int2str(contignum)),'data');
-  runpsat('td');
-  for i = 1:numbuses
-      string = strcat('simulation/sim9bus' , num2str(i), '.txt');
-      fid = fopen(string, 'w');
-      fprintf(fid, '%f\n', Varout.vars(offset:end,DAE.n + Bus.n + i));
-      fclose('all');
-  end
-
+  load('data/sim14_%d.mat', contignum);
   differential = DAE.n;
   algebraic = DAE.m;
   % A = full(matrix_read('matrix1'));

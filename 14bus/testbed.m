@@ -17,7 +17,6 @@ function [predcontig, actualcontig, confidence] = testbed(method, noise, window)
 
   maxfreq = .5;
   minfreq = .05;
-  initpsat;
   load('metadata.mat')
   contignum = ceil(numcontigs*rand);
   actualcontig = contignum;
@@ -43,20 +42,8 @@ function [predcontig, actualcontig, confidence] = testbed(method, noise, window)
   %% run simulation, generate data
   % at 60hz with fixed timesteps of 0.05s, simulating 20 polls/second on PMU
   %
-  Settings.freq = 60;
-  Settings.fixt = 1;
-  Settings.tstep = 0.05;
+  load('data/sim14_%d.mat', contignum);
   offset = 50;
-
-  runpsat(strcat('contig',int2str(contignum)),'data');
-  runpsat('td');
-  for i = 1:numbuses
-    string = strcat('simulation/sim9bus' , num2str(i), '.txt');
-    fid = fopen(string, 'w');
-    fprintf(fid, '%f\n', Varout.vars(offset:end,DAE.n + Bus.n + i));
-    fclose('all');
-  end
-
   differential = DAE.n;
   algebraic = DAE.m;
 
