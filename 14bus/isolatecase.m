@@ -56,7 +56,7 @@ function [proportion] = isolatecase(method,contignum, matrixnum, noise, window)
 
   differential = DAE.n;
   algebraic = DAE.m;
-  %A = dlmread('matrix1'); A = spconvert(A); A = full(A);
+  %A = matrix_read('matrix1');
 
   %%  Simulate Partial Placement of PMUs by obscuring percentage of simulated data
 
@@ -108,8 +108,7 @@ function [proportion] = isolatecase(method,contignum, matrixnum, noise, window)
   I = eye(differential);
   E = zeros(algebraic + differential);
   E(1:differential,1:differential) = I;
-  A = dlmread(strcat('data/matrixfull',int2str(contignum)));
-  A = full(spconvert(A));
+  A = matrix_read(sprintf('data/matrixfull%d', contignum));
   [vi,di] = eig(A,E); %solve generalized eigenvalue problem
 
   %% Sort and organize data from State Matrix properly (NOT NEEDED FOR NOW)
@@ -136,9 +135,7 @@ function [proportion] = isolatecase(method,contignum, matrixnum, noise, window)
   I = eye(differential);
   E = zeros(algebraic + differential);
   E(1:differential,1:differential) = I;
-  A = dlmread(strcat('data/matrixfull',int2str(k)));
-  A = full(spconvert(A));
-
+  A = full(matrix_read(sprintf('data/matrixfull%d', k)))
 
 
   format long

@@ -41,7 +41,7 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
 
   differential = DAE.n;
   algebraic = DAE.m;
-  %A = dlmread('matrix1'); A = spconvert(A); A = full(A);
+  % A = full(matrix_read('matrix1'));
   rangebus = (DAE.n + Bus.n + 1):(DAE.n + Bus.n + Bus.n);
 
   %% use n4sid
@@ -92,8 +92,7 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
       I = eye(differential);
       E = zeros(algebraic + differential);
       E(1:differential,1:differential) = I;
-      A = dlmread(strcat('data/matrixfull',int2str(k)));
-      A = full(spconvert(A));
+      A = full(matrix_read(sprintf('data/matrixfull%d', k)));
       [vi,di] = eig(A,E); %solve generalized eigenvalue problem
 
       fprintf('Contingency %d simulated\n',contignum);
@@ -123,7 +122,7 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
       fprintf('Column Index = Actual Eigenvectors\n');
       fprintf('Row Index = Predicted Eigenvectors\n');
       closeness = actualvecs'*normalizematrix(predvecs);
-      closeness = printnorms(closeness);
+      closeness = abs(closeness)
 
 
       %% Check if frequencies match
@@ -187,7 +186,7 @@ function [out1, out2] = sanitycheck(contignum, noise, window)
   %         x = predvecsEntire(:,j);
   %         x(rangebus) = actualvecs(:,j);
       end
-      
+
   end
 
 end

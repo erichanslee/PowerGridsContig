@@ -21,8 +21,8 @@ function genscript(basename, numbuses, numcontigs)
   % DSB: Why do we trim tiny elements here and not below?
   [A, Aoriginal] = jacobian(basename);
   Aoriginal = trim_tiny(Aoriginal);
-  write_sparse('data/matrixfull', A);
-  write_sparse('data/matrixred', Aoriginal);
+  matrix_write('data/matrixfull', A);
+  matrix_write('data/matrixred', Aoriginal);
 
   for i = 1:numcontigs
 
@@ -31,13 +31,13 @@ function genscript(basename, numbuses, numcontigs)
 
     % Compute full and reduced Jacobians and write to file
     [A, As] = jacobian('contig');
-    write_sparse(sprintf('data/matrixfull%d', i), A);
-    write_sparse(sprintf('data/matrixred%d', i), As);
+    matrix_write(sprintf('data/matrixfull%d', i), A);
+    matrix_write(sprintf('data/matrixred%d', i), As);
 
     % Compute SVD and write factors to file
     [U, S, V] = svds(Aoriginal-As);
-    write_sparse(sprintf('data/u%d', i), trim_tiny(U*S));
-    write_sparse(sprintf('data/v%d', i), trim_tiny(V));
+    matrix_write(sprintf('data/u%d', i), trim_tiny(U*S));
+    matrix_write(sprintf('data/v%d', i), trim_tiny(V));
 
     % Clean up data file
     delete('contig.m');
@@ -80,13 +80,4 @@ function [A, Ared] = jacobian(fname)
   runpsat('pf');
   A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
   Ared = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx)- 1e-6*speye(DAE.n);
-end
-
-
-% ------------------------------------------------------
-% Write a sparse matrix to a file
-function write_sparse(fname, A)
-  [col,row,val] = find(A);
-  data_dump = [col,row,val];
-  dlmwrite(fname, data_dump, 'precision', 16);
 end

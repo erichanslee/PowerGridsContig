@@ -5,14 +5,11 @@
 %   For now uses eig, which should just be a QR iteration,
 %   to calculate the eigenvalues.
 load('metadata.mat');
-Adata = dlmread('data/matrix');
-A = spconvert(Adata);
+A = matrix_read('data/matrix');
 
 for i = 1:numcontigs
-  udata = dlmread(strcat('data/u',int2str(i)));
-  u = spconvert(udata);
-  vdata = dlmread(strcat('data/v',int2str(i)));
-  v = spconvert(vdata);
   n = length(A);
+  u = matrix_read(sprintf('data/u%d', i));
+  v = matrix_read(sprintf('data/v%d', i));
   [Q,H] = InvArnoldi(A,ones(n,1),n,0,u,v,sprank(u));
 end
