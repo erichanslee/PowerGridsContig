@@ -3,3 +3,5 @@
 
 load('metadata.mat');
 genscript(basefilename, numbuses, numcontigs);
+psat_runtrials;
+gendata(numcontigs);
