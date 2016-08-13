@@ -1,20 +1,17 @@
-%% Calc runs a "simulation" of a random contingency
-% and then checks whether or not we can identify it
+%% calc_contig loads 
 
 % ~~~~~~~~~INPUTS~~~~~~~~~ %
-
 % method = method type number one would like to use
 % data = voltage readings from PMUs
 % PMU = indices of PMU placements
 % rangerest = indices of everything else
 % noise = boolean value indicating presence of noise
-% ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
+% ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 % predcontig = the cotingency the chosen method predicts
-% actualcontig = the contingency that was actually simulated
 % confidence = the confidence levels for correctly identified contigs
 
-function [predcontig, confidence, empvecsfull] = calc_contig(method, data, PMU, rangerest, noise)
+function [predcontig, confidence] = calc_contig(method, data, PMU, rangerest, noise)
 
 maxfreq = .5;
 minfreq = .05;

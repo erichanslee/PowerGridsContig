@@ -16,6 +16,8 @@
 function [predcontig, actualcontig, confidence] = testbed(method, noise, window)
 
 load('metadata.mat')
+
+%randomly pick contig
 contignum = ceil(numcontigs*rand);
 actualcontig = contignum;
 
@@ -44,9 +46,7 @@ offset = 50;
 
 %%  Randomly Place PMUs and Offset data
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
-PMU = place_PMU(rangebus, window);
-outrange = setdiff(rangebus, PMU);
-rangerest = [1:(differential + numlines), (differential + numlines + numlines + 1): (differential + algebraic), outrange];
+[PMU, rangerest] = place_PMU(rangebus, window);
 data = Varout.vars(offset:end,PMU);
 
 % predict contingency

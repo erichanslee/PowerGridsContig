@@ -3,11 +3,13 @@
 
 %   ~~~TODO: Make more realistic taking into account network topology~~~
 
-function [PMU] = place_PMU(rangebus,window)
+function [PMU, rangerest] = place_PMU(rangebus,window)
+load('metadata.mat');
 
 PMUnum = round(window*length(rangebus));
 PMU = randsample(rangebus,PMUnum);
 PMU = sort(PMU);
-
+outrange = setdiff(rangebus, PMU);
+rangerest = [1:(differential + numlines), (differential + numlines + numlines + 1): (differential + algebraic), outrange];
 
 end
