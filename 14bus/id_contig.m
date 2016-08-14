@@ -1,22 +1,50 @@
 % ~~~~~~~~~INPUTS~~~~~~~~~ %
 
 % method = method type number one would like to use
+% A,E = generalized eigenvalue problem matrices
+% empvals = empirical eigenvalues
+% empvecs = empirical eigenvectors
+% PMU = indices x1 is located on
+
+% ~~~~~~~~~OUTPUTS~~~~~~~~~ %
+% fittedvecs = fitted eigenvectors 
+
+function fittedvecs = id_contig(A, E, method, empvals, empvecs, PMU)
+    load metadata.mat
+
+    fittedvecs = zeros(differential + algebraic, length(empvals));
+    for j = 1:length(empvals)
+
+        % form variables to pass into calc_residual
+        lambda = empvals(j);
+        Ashift = A-lambda*E;
+        xfull = zeros(differential + algebraic,1);
+        x1 = empvecs(:,j);
+        rangerest = 1:(differential + algebraic);
+        rangerest = rangerest(~ismember(rangerest, PMU));
+        res = calc_residual(method, Ashift, x1, PMU, rangerest, xfull);
+        fittedvecs(:,j) = res;
+    end
+end
+
+% ~~~~~~~~~INPUTS~~~~~~~~~ %
+
+% method = method type number one would like to use
 % Ashift = matrix in question
 % x1 = subset of eigenvector
 % PMU = indices x1 is located on
 % rangerest = indices of the rest of the eigenvector
 % xfull = empty vector of size length(PMU) + length(rangerest)
-% P = permutation matrix passed in for convenience
+% P = permutation matrix passed in for  
 
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
 % residual = calculated residual
 % vec = full fitted eigenvector
 
-function [residual, vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfull, P)
+function [residual, vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfull)
         switch method
             case 1	%% METHOD 1
-                
                 % Solve an OLS problem to fill in unknown entries (min residual)
                 xfull(PMU) = x1;
                 xfull(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull(PMU));
@@ -26,7 +54,6 @@ function [residual, vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfu
                 
                 
             case 2	%% METHOD 2
-                
                 % Solve an OLS problem to fill in unknown entries (min residual)
                 xfull(PMU) = x1;
                 xfull(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,PMU)*xfull(PMU));
@@ -37,6 +64,10 @@ function [residual, vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfu
                 
                 
             case 3  %% METHOD 3
+                Ifull = eye(differential + algebraic);
+                order = [PMU, rangerest];
+                P = Ifull(order,:);
+
                 Ashift = Ashift*ctranspose(P);
                 
                 % Form Gramian
@@ -56,8 +87,10 @@ function [residual, vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfu
                 % Note: could easily just use eigenvalue as output
                 % but we want the full eigenvector for debugging purposes
                 
-            case 4  %% METHOD 4: Making x1 unit lengh again
-                
+            case 4  %% METHOD 4: Making x1 unit length again
+                Ifull = eye(differential + algebraic);
+                order = [PMU, rangerest];
+                P = Ifull(order,:);
                 Ashift = Ashift*ctranspose(P);
                 % Form Gramian
                 T = zeros(DAE.n + DAE.m,1+length(rangerest));

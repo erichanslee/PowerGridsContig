@@ -11,7 +11,7 @@
 % predcontig = the cotingency the chosen method predicts
 % confidence = the confidence levels for correctly identified contigs
 
-function [predcontig, confidence] = calc_contig(method, data, PMU, rangerest, noise)
+function [predcontig, confidence] = calc_contig(method, data, PMU, noise)
 
 maxfreq = .5;
 minfreq = .05;
@@ -34,21 +34,8 @@ for k = 1:numcontigs
     format long
     
     %% Calculate Backward Error
-    Ifull = eye(differential + algebraic);
-    order = [PMU, rangerest];
-    P = Ifull(order,:);
-    out = zeros(length(empvals),1);
-    for j = 1:length(empvals)
-
-        % form variables to pass into calc_residual
-        lambda = empvals(j);
-        Ashift = A-lambda*E;
-        xfull = zeros(differential + algebraic,1);
-        x1 = empvecs(:,j);
-        res = calc_residual(method, Ashift, x1, PMU, rangerest, xfull, P);
-        out(j) = norm(res);
-    end
-    data_dump(k) = mean(out);
+    out = id_contig(A, E, method, empvals, empvecs, PMU);
+    data_dump(k) = norm(out);
 end
 
 % calculate contingency and confidence measure

@@ -45,22 +45,15 @@ if(contignum > numcontigs)
     error('Contigency Number not found! Please enter a smaller integer')
 end
 
-load('data/sim14_%d.mat', contignum);
-
 %   Load data
-filename = ['data/sim14_' num2str(contignum) '.mat'];
+filename = ['data/busdata_' num2str(contignum) '.mat'];
 load(filename);
 offset = 50;
 
 %%  Randomly Place PMUs and Offset data
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
 PMU = place_PMU(rangebus, window);
-outrange = setdiff(rangebus, PMU);
-rangerest = [1:(differential + numlines), (differential + numlines + numlines + 1): (differential + algebraic), outrange];
-data = Varout.vars(offset:end,PMU);
-[empvals, empvecs]  = run_n4sid(data, noise, timestep, numlines, maxfreq, minfreq);
-empvecs = normalizematrix(empvecs);
-data_dump = zeros(1,numcontigs);
+data = data(offset:end, PMU - (differential + numlines));
 
 %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
 % from the reduced state matrix
@@ -91,18 +84,6 @@ E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
-%% Calculate Backward Error
-Ifull = eye(differential + algebraic);
-order = [PMU, rangerest];
-P = Ifull(order,:);
-out = zeros(length(temp2),1);
-for j = 1:length(temp2)
-    % form variables to pass into calc_residual
-    lambda = temp2(j);
-    Ashift = A-lambda*E;
-    xfull = zeros(differential + algebraic,1);
-    x1 = empvecs(:,j);
-    [res vec] = calc_residual(method, Ashift, x1, PMU, rangerest, xfull, P);
-end
+out = id_contig(A, E, method, empvals, empvecs, PMU);
 
 end

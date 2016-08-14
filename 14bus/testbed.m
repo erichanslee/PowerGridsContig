@@ -39,17 +39,18 @@ if(contignum > numcontigs)
     error('Contigency Number not found!')
 end
 
+
 %   Load data
-filename = ['data/sim14_' num2str(contignum) '.mat'];
+filename = ['data/busdata_' num2str(contignum) '.mat'];
 load(filename);
 offset = 50;
 
 %%  Randomly Place PMUs and Offset data
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
-[PMU, rangerest] = place_PMU(rangebus, window);
-data = Varout.vars(offset:end,PMU);
+PMU = place_PMU(rangebus, contignum, window);
+data = data(offset:end, PMU - (differential + numlines));
 
 % predict contingency
-[predcontig, confidence] = calc_contig(method, data, PMU, rangerest, noise);
+[predcontig, confidence] = calc_contig(method, data, PMU, noise);
 
 end

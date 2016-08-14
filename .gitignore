@@ -1,11 +1,14 @@
 14bus/data/v*
+14bus/data/*.mat
 14bus/data/matri*
 14bus/data/u*
 14bus/figures/*.png
 14bus/simulation/*.txt
 14bus/simulation/*.mat
-9bus/simulation/*.mat
 9bus/data/v*
+9bus/data/*.mat
 9bus/data/matri*
 9bus/data/u*
+9bus/figures/*.png
 9bus/simulation/*.txt
+9bus/simulation/*.mat
