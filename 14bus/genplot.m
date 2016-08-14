@@ -1,4 +1,3 @@
-%% Genplot is simply a script to generate plots with specific properties
 
 % ~~~~~~~~~INPUTS~~~~~~~~~ %
 
@@ -9,31 +8,38 @@
 
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
-% A .png file with the desired image
+% A png file with the desired image
 % out = The Confusion Matrix
 % confidence = array of confidence measures from each
 %               trial instance
 
-function [out,confidence] = genplot(method, numtrials, noise, window)
+
+% TODO: fix calc_contig, this as right now M is printing out the norms
+% of the eigenvectors instead.
+function [M] = genplot(method, noise, PMU)
 
   load metadata.mat
 
   %   temp variables
   M = zeros(numcontigs);
-  C = zeros(1,numtrials);
-  counter = 1;
 
-  for n = 1:numtrials
-    [i,j,con] = testbed(method, noise, window);
-    M(i,j) = M(i,j) + 1;
-    if(i == j)
-      C(counter) = con;
-      counter = counter + 1;
-    end
+  for i = 1:numcontigs
+      %   Load data
+      filename = ['data/busdata_' num2str(i) '.mat'];
+      load(filename);
+      offset = 50;
+
+      %%  Randomly Place PMUs and Offset data
+      data = data(offset:end, PMU - (differential + numlines));
+
+      % predict contingency
+      [predcontig, confidence, list] = calc_contig(method, data, PMU, noise);
+
+      % Populate Confusion Matrix M 
+      for j = 1:numcontigs
+        M(i,j) = norm(list{j});
+      end
   end
 
-  % set outputs
-  out = M;
-  confidence = C;
 
 end

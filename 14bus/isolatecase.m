@@ -14,7 +14,6 @@
 % contignum = contingency to simulate
 % matrixnum = linearized system to use for residual calculation
 % noise = percentage of max amplitude to add as gaussian noise
-% window = percentage of PMUs visible
 
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
@@ -45,22 +44,26 @@ if(contignum > numcontigs)
     error('Contigency Number not found! Please enter a smaller integer')
 end
 
-%   Load data
+%%  Randomly Place PMUs and Offset data
+PMU = place_PMU(contignum, window);
+rangebus = (differential + numlines + 1):(differential + numlines + numlines);
+
+%   Load and offset data
 filename = ['data/busdata_' num2str(contignum) '.mat'];
 load(filename);
 offset = 50;
-
-%%  Randomly Place PMUs and Offset data
-rangebus = (differential + numlines + 1):(differential + numlines + numlines);
-PMU = place_PMU(rangebus, window);
 data = data(offset:end, PMU - (differential + numlines));
+
+[empvals, empvecs]  = run_n4sid(data, noise, timestep, numlines, maxfreq, minfreq);
+empvecs = normalizematrix(empvecs);
+data_dump = zeros(1,numcontigs);
 
 %% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
 % from the reduced state matrix
 I = eye(differential);
 E = zeros(algebraic + differential);
 E(1:differential,1:differential) = I;
-A = matrix_read(sprintf('data/matrixfull%d', contignum));
+A = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
 [vi,di] = eig(A,E); %solve generalized eigenvalue problem
 
 %% Organize data from State Matrix properly
@@ -84,6 +87,6 @@ E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
-out = id_contig(A, E, method, empvals, empvecs, PMU);
+[empresidual, empvecsfull] = id_contig(A, E, method, empvals, empvecs, PMU);
 
 end

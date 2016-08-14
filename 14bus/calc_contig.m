@@ -11,11 +11,13 @@
 % predcontig = the cotingency the chosen method predicts
 % confidence = the confidence levels for correctly identified contigs
 
-function [predcontig, confidence] = calc_contig(method, data, PMU, noise)
+function [predcontig, confidence, list] = calc_contig(method, data, PMU, noise)
+
 
 maxfreq = .5;
 minfreq = .05;
 load('metadata.mat');
+list = cell(1,numcontigs);
 
 %use n4sid
 [empvals, empvecs]  = run_n4sid(data, noise, timestep, numlines, maxfreq, minfreq);
@@ -34,8 +36,9 @@ for k = 1:numcontigs
     format long
     
     %% Calculate Backward Error
-    out = id_contig(A, E, method, empvals, empvecs, PMU);
-    data_dump(k) = norm(out);
+    [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, PMU);
+    data_dump(k) = norm(fittedres);
+    list{k} = fittedvecs;
 end
 
 % calculate contingency and confidence measure

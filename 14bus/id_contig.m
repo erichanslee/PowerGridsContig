@@ -9,7 +9,7 @@
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 % fittedvecs = fitted eigenvectors 
 
-function fittedvecs = id_contig(A, E, method, empvals, empvecs, PMU)
+function [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, PMU)
     load metadata.mat
 
     fittedvecs = zeros(differential + algebraic, length(empvals));
@@ -22,8 +22,7 @@ function fittedvecs = id_contig(A, E, method, empvals, empvecs, PMU)
         x1 = empvecs(:,j);
         rangerest = 1:(differential + algebraic);
         rangerest = rangerest(~ismember(rangerest, PMU));
-        res = calc_residual(method, Ashift, x1, PMU, rangerest, xfull);
-        fittedvecs(:,j) = res;
+        [fittedres(:,j), fittedvecs(:,j)] = calc_residual(method, Ashift, x1, PMU, rangerest, xfull);
     end
 end
 

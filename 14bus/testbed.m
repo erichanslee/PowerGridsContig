@@ -46,8 +46,7 @@ load(filename);
 offset = 50;
 
 %%  Randomly Place PMUs and Offset data
-rangebus = (differential + numlines + 1):(differential + numlines + numlines);
-PMU = place_PMU(rangebus, contignum, window);
+PMU = place_PMU(contignum, window);
 data = data(offset:end, PMU - (differential + numlines));
 
 % predict contingency

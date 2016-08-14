@@ -11,8 +11,11 @@
 
 % PMU = indices for PMU placement
 
-function PMU = place_PMU(rangebus, contignum, window)
+function PMU = place_PMU(contignum, window)
 
+load metadata.mat
+
+rangebus = (differential + numlines + 1):(differential + numlines + numlines);
 len = length(rangebus);
 PMUnum = round(window*len);
 PMUidx = randsample(1:len,PMUnum);
