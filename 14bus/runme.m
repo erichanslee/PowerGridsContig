@@ -48,19 +48,23 @@ load metadata.mat;
 
 % PMUs at all buses
 percentage = 1;
+noise = 0;
 idx = gen_PMUidx(percentage, numbuses);
 
 
 % Contig 3 is a case where misidentification occurs (Contig 4 identified instead)
 % NOTE: PMU data is on rows 64:77 of linearvecs/empvecs/empresidual
+
+% The output from the correctly-fitted data (that is "worse" by the averaging metric compared to
+% the false positive)
 method = Method3;
-contignum = 3;
-matrixnum = 3;
-noise = 0;
+contignum = 3; % Contingency to Simulate
+matrixnum = 3; % Jacobian in which to fit eigenvectors
 [linearvecs_true, empvecs_true, empresidual_true] = isolatecase(method, contignum, matrixnum, noise, idx);
- 
+
+% The false positive 
 method = Method3;
-contignum = 3;
-matrixnum = 4;
-noise = 0;
+contignum = 3; % Contingency to Simulate
+matrixnum = 4; % Jacobian in which to fit eigenvectors
 [linearvecs_false, empvecs_false, empresidual_false] = isolatecase(method, contignum, matrixnum, noise, idx);
+
