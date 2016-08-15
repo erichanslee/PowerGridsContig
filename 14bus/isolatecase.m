@@ -1,9 +1,7 @@
-% isolatecase is an auxillary function for debugging purposes that checks
+% isolatecase is an auxillary function for data analysis that checks
 % runs a time-domain simulation for contingency <contignum> and then
 % calculates residuals for the linearized system <matrixnum>
 
-% That is, it checks data from contingency identification routine on a
-% cases-by-case basis for debugging purposes.
 
 % NOTE: code contains quite a bit of similarity with other files but
 % is separate due to large amount of output. 
@@ -21,7 +19,7 @@
 % empvecsfull = eigenvectors from fitting
 % empresidual = residual from fittings
 
-function [linearvecs, empvecsfull, empresidual] = isolatecase(method, contignum, matrixnum, noise, window)
+function [linearvecs, empvecsfull, empresidual] = isolatecase(method, contignum, matrixnum, noise, PMUidx)
 
 maxfreq = .5;
 minfreq = .05;
@@ -36,23 +34,19 @@ if(noise > 1 || noise < 0)
     error('Problems with parameter "Noise". Please enter in a real number in the range of [0,1]')
 end
 
-if(window > 1 || window < 0)
-    error('Problems with parameter "Window". Please enter in a real number in the range of [0,1]')
-end
-
 if(contignum > numcontigs)
     error('Contigency Number not found! Please enter a smaller integer')
 end
 
 %%  Randomly Place PMUs and Offset data
-PMU = place_PMU(contignum, window);
+win = place_PMU(contignum, PMUidx);
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
 
 %   Load and offset data
 filename = ['data/busdata_' num2str(contignum) '.mat'];
 load(filename);
 offset = 50;
-data = data(offset:end, PMU - (differential + numlines));
+data = data(offset:end, win - (differential + numlines));
 
 [empvals, empvecs]  = run_n4sid(data, noise, timestep, numlines, maxfreq, minfreq);
 empvecs = normalizematrix(empvecs);
@@ -87,6 +81,6 @@ E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
-[empresidual, empvecsfull] = id_contig(A, E, method, empvals, empvecs, PMU);
+[empresidual, empvecsfull] = id_contig(A, E, method, empvals, empvecs, win);
 
 end

@@ -1,4 +1,4 @@
-%% Generates Simulation Files and writes to data/sim*.mat
+%% Loads simulation files and writes subset (only bus voltages) to data/sim*.mat
 
 function gendata(numcontigs)
 

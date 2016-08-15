@@ -16,7 +16,7 @@
 
 % TODO: fix calc_contig, this as right now M is printing out the norms
 % of the eigenvectors instead.
-function [M] = genplot(method, noise, PMU)
+function [M] = genplot(method, noise, PMUidx)
 
   load metadata.mat
 
@@ -28,12 +28,12 @@ function [M] = genplot(method, noise, PMU)
       filename = ['data/busdata_' num2str(i) '.mat'];
       load(filename);
       offset = 50;
-
+      win = place_PMU(i, PMUidx);
       %%  Randomly Place PMUs and Offset data
-      data = data(offset:end, PMU - (differential + numlines));
+      data = data(offset:end, win - (differential + numlines));
 
       % predict contingency
-      [predcontig, confidence, list] = calc_contig(method, data, PMU, noise);
+      [predcontig, confidence, ~, list] = calc_contig(method, data, win, noise);
 
       % Populate Confusion Matrix M 
       for j = 1:numcontigs

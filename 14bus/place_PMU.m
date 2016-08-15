@@ -1,24 +1,20 @@
 %   place_PMU simulates virtual placement of PMUs by generating
-%   a set of indices called "PMU" in which voltages can be read
+%   a set of indices called "win" in which voltages can be read
 
 % ~~~~~~~~~INPUTS~~~~~~~~~ %
 
-% rangebus
+% PMUidx = bus indices where PMUs are placed (between 1 and numbuses)
 % contignum = contig number for knowledge of line faliure
-% window = percentage PMU placement
 
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
-% PMU = indices for PMU placement
+% win = indices in which voltages can be read (indexed for PSAT)
 
-function PMU = place_PMU(contignum, window)
+function win = place_PMU(contignum, PMUidx)
 
 load metadata.mat
 
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
-len = length(rangebus);
-PMUnum = round(window*len);
-PMUidx = randsample(1:len,PMUnum);
 run(sprintf('contig%d.m',contignum));
 Lines = Line.con(:,1:2);
 Lines(contignum,:) = [];
@@ -34,7 +30,7 @@ for i = 1:length(PMUidx)
 end
 
 PMUidx = sort(unique(Agg_Neighbor));
-PMU = rangebus(PMUidx);
+win = rangebus(PMUidx);
 
 end
 	
