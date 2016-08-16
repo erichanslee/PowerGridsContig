@@ -29,7 +29,7 @@ function [M] = genplot(method, noise, PMUidx)
       load(filename);
       offset = 50;
       win = place_PMU(i, PMUidx);
-      %%  Randomly Place PMUs and Offset data
+      % Offset and Isolate data
       data = data(offset:end, win - (differential + numlines));
 
       % predict contingency

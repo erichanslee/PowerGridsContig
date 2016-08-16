@@ -33,8 +33,6 @@ end
 contignum = ceil(numcontigs*rand);
 actualcontig = contignum;
 
-%   Generate random PMU placement 
-PMU = gen_PMUidx(percentage, numbuses)
 
 %   Load contig data
 filename = ['data/busdata_' num2str(contignum) '.mat'];
@@ -42,6 +40,7 @@ load(filename);
 offset = 50;
 
 %%  Randomly Place PMUs and Offset data
+PMU = gen_PMUidx(percentage, numbuses)
 PMU = place_PMU(contignum, PMU);
 data = data(offset:end, PMU - (differential + numlines));
 

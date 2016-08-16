@@ -30,3 +30,4 @@
 %   normalizematrix - Scale matrix columns to unit norm
 %   matrix_write    - Write a matrix to file (dense or sparse)
 %   matrix_read     - Read a matrix from file (dense or sparse)
+%	printvec		- Print eigenvectors for comparison
