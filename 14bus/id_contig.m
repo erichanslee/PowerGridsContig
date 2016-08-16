@@ -109,5 +109,5 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 % and save the norm
                 residual = 1/vs(1)*Ashift*xfull;
         end
-    vec = xfull; 
+    vec = P'*xfull; 
 end
