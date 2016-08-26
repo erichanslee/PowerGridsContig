@@ -31,3 +31,4 @@
 %   matrix_write    - Write a matrix to file (dense or sparse)
 %   matrix_read     - Read a matrix from file (dense or sparse)
 %	printvec		- Print eigenvectors for comparison
+%	filter_eigpairs	- Filters eigenpairs given dampening range (to isolate least dampened pairs)

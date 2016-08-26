@@ -52,7 +52,7 @@ data = data(offset:end, win - (differential + numlines));
 empvecs = normalizematrix(empvecs);
 data_dump = zeros(1,numcontigs);
 
-%% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
+% Calculate Eigenvalue and Eigenvector Predictions from State Matrix
 % from the reduced state matrix
 I = eye(differential);
 E = zeros(algebraic + differential);
@@ -60,18 +60,9 @@ E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
 [vi,di] = eig(A,E); %solve generalized eigenvalue problem
 
-%% Organize data from State Matrix properly
-linvals = (diag(di));
-rangepred = find(abs(imag(linvals)/2/pi) > minfreq & abs(imag(linvals)/2/pi) < maxfreq);
-linvals = linvals(rangepred);
-[~, idx1] = sort(abs(imag(linvals)));
-
-%cut and sort eigenpairs of state matrix
-linvals = linvals(idx1);
-linvecs = vi(rangebus,rangepred); %where the important eigenvectors are
-linvecs = linvecs(:,idx1);
-linvecsEntire = vi(:,rangepred);
-linvecsEntire = linvecsEntire(:,idx1);
+% Organize data from State Matrix properly
+[linvecsEntire, linvalsEntire] = filter_eigpairs(minfreq, maxfreq, diag(di), vi);
+linvecs = linvecsEntire(rangebus,:); 
 linearvecs = linvecsEntire;
 
 % form DAE matrix E
