@@ -25,9 +25,6 @@ if(noise > 1 || noise < 0)
     error('Problems with parameter "Noise". Please enter in a real number in the range of [0,1]')
 end
 
-if(contignum > numcontigs)
-    error('Contigency Number not found!')
-end
 
 %   randomly pick contig
 contignum = ceil(numcontigs*rand);
@@ -41,6 +38,7 @@ offset = 50;
 
 %%  Randomly Place PMUs and Offset data
 PMU = gen_PMUidx(percentage, numbuses)
+PMU = sort(PMU);
 PMU = place_PMU(contignum, PMU);
 data = data(offset:end, PMU - (differential + numlines));
 

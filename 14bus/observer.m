@@ -1,11 +1,11 @@
-function observerdata = observer(contignum, matrixnum, noise, PMUidx)
+function dataobs = observer(contignum, matrixnum, noise, PMUidx)
 
 maxfreq = .5;
 minfreq = .05;
 tstep = .05;
 load metadata.mat;
 
-%%  Randomly Place PMUs and Offset data
+%%  Place PMUs and Offset data
 win = place_PMU(contignum, PMUidx);
 rangebus = (differential + numlines + 1):(differential + numlines + numlines);
 
@@ -15,6 +15,7 @@ load(filename);
 offset = 50;
 data = data(offset:end, win - (differential + numlines));
 data = data';
+
 % Calculate Eigenvalue and Eigenvector Predictions from State Matrix
 % from the reduced state matrix
 I = eye(differential);
@@ -28,21 +29,16 @@ A = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
 linvecs = linvecsEntire(rangebus,:); 
 linearvecs = linvecsEntire;
 
+% Construct possible system generating data
 M = form_ode(linvecs, linvals);
+M = expm(M*tstep);
+
+% Construct gain matrix and run observer
+K = 0.5*M;
 x0 = 1.2*ones(numlines,1);
-K = -4*M;
-[len,~] = size(data);
-observerdata = zeros(size(data));
-observerdata(:,1) = x0;
-for i = 1:len
-	xobs_old = observerdata(:,i);
-	xdata_old = data(:,i);
-	Prop = exp(M*i*tstep);
-	xnew = Prop*xobs_old + Prop^4*(xdata_old - xobs_old);
-	observerdata(:,i+1) = xnew;
-end
+dataobs = run_observer(data, M, K, x0)
 hold on;
-plot(observerdata(1,:));
+plot(real(dataobs(1,:)));
 plot(data(1,:));
 
 end

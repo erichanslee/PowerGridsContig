@@ -24,6 +24,7 @@
 %   psat_runtrials  - Run PSAT sims for every contingency
 %	isolatecase		- Run contingency identification routine for fixed linearized system	
 %   run_n4sid       - Runs n4sid and extracts empirical eigenpairs
+%	run_observer	- given Gain and System matrices, calculates observer
 %	testbed		   	- Run contingency identification routine for random system
 %
 % Helper functions:
@@ -31,4 +32,4 @@
 %   matrix_write    - Write a matrix to file (dense or sparse)
 %   matrix_read     - Read a matrix from file (dense or sparse)
 %	printvec		- Print eigenvectors for comparison
-%	filter_eigpairs	- Filters eigenpairs given dampening range (to isolate least dampened pairs)
+%	filter_eigpairs	- Filters eigenpairs given frequency range

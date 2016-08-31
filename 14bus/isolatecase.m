@@ -16,10 +16,10 @@
 % ~~~~~~~~~OUTPUTS~~~~~~~~~ %
 
 % linearvecs = eigenvectors from the linearized system Jacobian
-% empvecsfull = eigenvectors from fitting
+% empvecsEntire = eigenvectors from fitting
 % empresidual = residual from fittings
 
-function [linearvecs, empvecsfull, empresidual] = isolatecase(method, contignum, matrixnum, noise, PMUidx)
+function [linearvecs, empvecsEntire, empresidual, dotmatrix] = isolatecase(method, contignum, matrixnum, noise, PMUidx)
 
 maxfreq = .5;
 minfreq = .05;
@@ -72,6 +72,7 @@ E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
-[empresidual, empvecsfull] = id_contig(A, E, method, empvals, empvecs, win);
+[empresidual, empvecsEntire] = id_contig(A, E, method, empvals, empvecs, win);
+dotmatrix = empvecsEntire'*linvecsEntire;
 
 end
