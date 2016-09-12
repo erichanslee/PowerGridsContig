@@ -11,7 +11,7 @@ E = eye(n);
 method = 3;
 [V,D] = eig(A,E);
 win = 1:10;
-empvecs = V(win,:)
+empvecs = V(win,:);
 empvals = diag(D);
 
 [res,vecfull] = id_contig(A,E,method,empvals, empvecs,win);

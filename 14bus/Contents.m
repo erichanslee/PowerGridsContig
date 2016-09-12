@@ -33,3 +33,9 @@
 %   matrix_read     - Read a matrix from file (dense or sparse)
 %	printvec		- Print eigenvectors for comparison
 %	filter_eigpairs	- Filters eigenpairs given frequency range
+
+% Methods:
+%   Method 1        - Solves LS problem, subject to normalized signal
+%   Method 2        - Solves LS problem, and then renormalizes
+%   Method 3        - Solves constrained optimization problem
+%   Method 4
