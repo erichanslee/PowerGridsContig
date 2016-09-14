@@ -30,9 +30,9 @@ end
 initpsat
 runpsat(basefilename,'data');
 runpsat('pf');
-Aoriginal = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx)- 1e-6*speye(DAE.n);
-Aoriginal(abs(Aoriginal) < 10^-10) = 0;
-A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
+Aoriginal = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx);
+Aoriginal(abs(Aoriginal) < 10^-14) = 0;
+A = [DAE.Fx, DAE.Fy; DAE.Gx, DAE.Gy];
 
 [col,row,val] = find(Aoriginal);
 data_dump = [col,row,val];
@@ -52,7 +52,7 @@ for i = 1:numcontigs
     temp = strcat(filename,num2str(i));
     runpsat(temp,'data');
     runpsat('pf');
-    As = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx) - 1e-6*speye(DAE.n); 
+    As = DAE.Fx - DAE.Fy*(DAE.Gy\DAE.Gx); 
     diff = Aoriginal - As;
     A = [DAE.Fx DAE.Fy; DAE.Gx DAE.Gy];
     
