@@ -1,24 +1,34 @@
-% Checks correctness of a few routines:
+% Checks correctness of id_contig.m
 
-% place_PMU.m
-% filter_eigenpairs.m
-% id_contig.m
+%% Test Case: Random
 load metadata.mat
 
 n = differential + algebraic;
 A = rand(n);
 E = eye(n);
 method = 3;
-[V,D] = eig(A,E);
-win = 1:10;
-empvecs = V(win,:);
-empvals = diag(D);
+[v1,d1] = eig(A,E);
+win =  (differential + numlines + 1):(differential + numlines + numlines);
+v1_win = v1(win,:);
+d1_diag = diag(d1);
 
-[res,vecfull] = id_contig(A,E,method,empvals, empvecs,win);
+[res1,vec1] = id_contig(A,E,method,d1_diag, normalizematrix(v1_win), win);
 
-if(norm(res) < 1e-8)
-	disp('Function id_contig Passed\n');
-else
-	disp('Function id_contig Failed\n');
-end
 
+%% Test Case: Power System
+
+maxfreq = .5;
+minfreq = .05;
+contignum = 1;
+
+I = eye(differential);
+E = zeros(algebraic + differential);
+E(1:differential,1:differential) = I;
+A = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
+[v2,d2] = eig(A,E); 
+d2 = d2 + 1e-6*eye(size(E));
+
+
+[v2_subset, d2_subset] = filter_eigpairs(minfreq, maxfreq, diag(d2), v2);
+
+[res2, vec2] = id_contig(A, E, method, d2_subset, normalizematrix(v2_subset(win,:)), win);

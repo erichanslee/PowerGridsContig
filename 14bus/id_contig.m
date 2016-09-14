@@ -13,6 +13,7 @@ function [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, win
     load metadata.mat
 
     fittedvecs = zeros(differential + algebraic, length(empvals));
+    fittedres = zeros(differential + algebraic, length(empvals));
     for j = 1:length(empvals)
 
         % form variables to pass into calc_residual
@@ -52,7 +53,7 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 
                 % Compute the residual and save the norm
                 residual = Ashift*xfull;
-                
+                vec = xfull;
                 
             case 2	%% METHOD 2
                 % Solve an OLS problem to fill in unknown entries (min residual)
@@ -62,6 +63,7 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 % Compute the residual and save the norm
                 xfull = xfull/norm(xfull);
                 residual= Ashift*xfull;
+                vec = xfull;
                 
                 
             case 3  %% METHOD 3
@@ -75,16 +77,20 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 T = zeros(differential + algebraic,1+length(rangerest));
                 T(1:length(win),1) = x1;
                 T((length(win)+1):end,2:end) = eye(length(rangerest));
-                G = ctranspose(T)*(ctranspose(Ashift)*Ashift)*T;
+                G = Ashift*T;
                 
+                % NOT STABLE.. G'*G condition number 10^15
+                % [vs,ds] = eigs(G'*G,1, 'sm');
+
                 % Calculate smallest eigenvector and then form eigenvector
-                [vs,ds] = eigs(G,1,'sm');
+                [vs,ds] = svds(G',1,'smallest');
                 xfull(1:length(win)) = vs(1)*x1;
                 xfull((length(win)+1):end) = vs(2:end);
                 
                 % Compute the residual and save the norm
                 
                 residual = Ashift*xfull;
+                vec = P'*xfull; 
                 % Note: could easily just use eigenvalue as output
                 % but we want the full eigenvector for debugging purposes
                 
@@ -108,6 +114,7 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 % Compute the residual, renormalize x1 to have unit length
                 % and save the norm
                 residual = 1/vs(1)*Ashift*xfull;
+                vec = P'*xfull; 
         end
-    vec = P'*xfull; 
+
 end

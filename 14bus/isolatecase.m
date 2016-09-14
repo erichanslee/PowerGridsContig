@@ -19,7 +19,7 @@
 % empvecsEntire = eigenvectors from fitting
 % empresidual = residual from fittings
 
-function [linearvecs, empvecsEntire, empresidual, dotmatrix] = isolatecase(method, contignum, matrixnum, noise, PMUidx)
+function [linvecsEntire, empvecsEntire, empresidual, dotmatrix] = isolatecase(method, contignum, matrixnum, noise, PMUidx)
 
 maxfreq = .5;
 minfreq = .05;
@@ -57,22 +57,16 @@ data_dump = zeros(1,numcontigs);
 I = eye(differential);
 E = zeros(algebraic + differential);
 E(1:differential,1:differential) = I;
-A = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
-[vi,di] = eig(A,E); %solve generalized eigenvalue problem
+Atrue = full(matrix_read(sprintf('data/matrixfull%d', contignum)));
+[vi,di] = eig(Atrue,E);
 
 % Organize data from State Matrix properly
-[linvecsEntire, linvalsEntire] = filter_eigpairs(minfreq, maxfreq, diag(di), vi);
-linvecs = linvecsEntire(rangebus,:); 
-linearvecs = linvecsEntire;
+[linvecsEntire, linvals] = filter_eigpairs(minfreq, maxfreq, diag(di), vi);
 
-% form DAE matrix E
-I = eye(differential);
-E = zeros(algebraic + differential);
-E(1:differential,1:differential) = I;
 A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
 [empresidual, empvecsEntire] = id_contig(A, E, method, empvals, empvecs, win);
-dotmatrix = empvecsEntire'*linvecsEntire;
+dotmatrix = normalizematrix(empvecsEntire)'*linvecsEntire;
 
 end
