@@ -21,6 +21,7 @@ maxfreq = .5;
 minfreq = .05;
 contignum = 1;
 n = differential + algebraic;
+method = 3;
 
 I = eye(differential);
 E = zeros(algebraic + differential);
@@ -36,4 +37,4 @@ v2_arg = normalizematrix(v2_subset(win,:));
 
 %% 
 disp('Dot Product of Fitted and Real eigenvector in Second Problem:');
-disp(vec1(:,2)'*v2(:,1)/norm(v2(:,1)));
+disp(vec2(:,2)'*v2(:,1)/norm(v2(:,1)));
