@@ -67,6 +67,6 @@ A = full(matrix_read(sprintf('data/matrixfull%d', matrixnum)));
 format long
 
 [empresidual, empvecsEntire] = id_contig(A, E, method, empvals, empvecs, win);
-dotmatrix = normalizematrix(empvecsEntire)'*linvecsEntire;
+dotmatrix = empvecsEntire'*normalizematrix(linvecsEntire);
 
 end

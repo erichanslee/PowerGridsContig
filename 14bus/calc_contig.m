@@ -11,7 +11,7 @@
 % predcontig = the cotingency the chosen method predicts
 % confidence = the confidence levels for correctly identified contigs
 
-function [predcontig, confidence, listvecs, listres] = calc_contig(method, data, win, noise)
+function [listvecs, listres] = calc_contig(method, data, win, noise)
 
 
 maxfreq = .5;
@@ -25,7 +25,6 @@ listres = cell(1,numcontigs);
 [empvals, empvecs]  = run_n4sid(data, noise, timestep, numlines, maxfreq, minfreq);
 empvecs = normalizematrix(empvecs);
 data_dump = zeros(1,numcontigs);
-clc;
 
 % form DAE matrix E
 I = eye(differential);
@@ -39,16 +38,9 @@ for k = 1:numcontigs
     
     %% Calculate Backward Error
     [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, win);
-    data_dump(k) = norm(fittedres);
     listvecs{k} = fittedvecs;
     listres{k} = fittedres;
 end
 
-% calculate contingency and confidence measure
-[val1, idx1] = min(data_dump);
-data_dump(idx1) = [];
-[val2, ~] = min(data_dump);
-predcontig = idx1;
-confidence = abs(val2 - val1)/abs(val1);
 
 end
