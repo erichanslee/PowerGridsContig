@@ -11,9 +11,14 @@
 
 function [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, win)
     load metadata.mat
-
+    minfreq = 0.05;
+    maxfreq = .5;
     fittedvecs = zeros(differential + algebraic, length(empvals));
     fittedres = zeros(differential + algebraic, length(empvals));
+    
+    [v2,d2] = eig(A,E); 
+    [v2_subset, ~] = filter_eigpairs(minfreq, maxfreq, diag(d2), v2);
+    
     for j = 1:length(empvals)
 
         % form variables to pass into calc_residual
@@ -23,7 +28,7 @@ function [fittedres, fittedvecs] = id_contig(A, E, method, empvals, empvecs, win
         x1 = empvecs(:,j);
         rangerest = 1:(differential + algebraic);
         rangerest = rangerest(~ismember(rangerest, win));
-        [fittedres(:,j), fittedvecs(:,j)] = calc_residual(method, Ashift, x1, win, rangerest, xfull);
+        [fittedres(:,j), fittedvecs(:,j)] = calc_residual(method, Ashift, x1, win, rangerest, xfull, v2_subset(rangerest,j));
     end
 end
 
@@ -42,11 +47,11 @@ end
 % residual = calculated residual
 % vec = full fitted eigenvector
 
-function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfull)
+function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfull, truevec)
     load metadata.mat
 
         switch method
-            case 1	%% METHOD 1
+            case 'Unconstrained'
                 % Solve an OLS problem to fill in unknown entries (min residual)
                 xfull(win) = x1;
                 xfull(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,win)*xfull(win));
@@ -55,22 +60,10 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 residual = Ashift*xfull;
                 vec = xfull;
                 
-            case 2	%% METHOD 2
-                % Solve an OLS problem to fill in unknown entries (min residual)
-                xfull(win) = x1;
-                xfull(rangerest) = (-1*Ashift(:,rangerest))\(Ashift(:,win)*xfull(win));
-                
-                % Compute the residual and save the norm
-                xfull = xfull/norm(xfull);
-                residual= Ashift*xfull;
-                vec = xfull;
-                
-                
-            case 3  %% METHOD 3
+            case 'Constrained'  % Constrained Fitting
                 Ifull = eye(differential + algebraic);
                 order = [win, rangerest];
                 P = Ifull(order,:);
-
                 Ashift = Ashift*ctranspose(P);
                 
                 % Form Gramian
@@ -78,42 +71,40 @@ function [residual, vec] = calc_residual(method, Ashift, x1, win, rangerest, xfu
                 T(1:length(win),1) = x1;
                 T((length(win)+1):end,2:end) = eye(length(rangerest));
                 G = Ashift*T;
-                
-                % NOT STABLE.. G'*G condition number 10^15
-                % [vs,ds] = eigs(G'*G,1, 'sm');
 
                 % Calculate smallest eigenvector and then form eigenvector
                 [vs,ds] = svds(G',1,'smallest');
                 xfull(1:length(win)) = vs(1)*x1;
-                xfull((length(win)+1):end) = vs(2:end);
-                
-                % Compute the residual and save the norm
-                
+                xfull((length(win)+1):end) = vs(2:end);              
                 residual = Ashift*xfull;
                 vec = P'*xfull; 
-                % Note: could easily just use eigenvalue as output
-                % but we want the full eigenvector for debugging purposes
                 
-            case 4  %% METHOD 4: Making x1 unit length again
+            case 'OrthReg'  % Orthogonal Regularization. 
+                temp = rand(length(truevec));
+                temp(:,1) = truevec;
+                [Q,~] = qr(temp);
+                Q(:,1) = 0;
+                Q = [zeros(1,length(truevec));Q];
+                Gamma = Q';
+                alpha = 0.1;
+                
+                
                 Ifull = eye(differential + algebraic);
                 order = [win, rangerest];
                 P = Ifull(order,:);
                 Ashift = Ashift*ctranspose(P);
+
                 % Form Gramian
                 T = zeros(differential + algebraic,1+length(rangerest));
                 T(1:length(win),1) = x1;
                 T((length(win)+1):end,2:end) = eye(length(rangerest));
-                G = ctranspose(T)*(ctranspose(Ashift)*Ashift)*T;
-                
+                G = [Ashift*T; alpha*Gamma];
+
                 % Calculate smallest eigenvector and then form eigenvector
-                [vs,ds] = eigs(G,1,'sm');
-                xfull = zeros(differential + algebraic,1);
+                [vs,ds] = svds(G',1,'smallest');
                 xfull(1:length(win)) = vs(1)*x1;
-                xfull((length(win)+1):end) = vs(2:end);
-                
-                % Compute the residual, renormalize x1 to have unit length
-                % and save the norm
-                residual = 1/vs(1)*Ashift*xfull;
+                xfull((length(win)+1):end) = vs(2:end);              
+                residual = Ashift*xfull;
                 vec = P'*xfull; 
         end
 

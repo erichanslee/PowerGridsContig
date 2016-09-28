@@ -1,17 +1,16 @@
 % Checks correctness of id_contig.m
 
-cd ..;
+clear all;
 load metadata.mat
 
 
 
-%% Test Case: Power System (Doesn't work well)
-
+%% Test Case: Power System 
 maxfreq = .5;
 minfreq = .05;
 contignum = 1;
 n = differential + algebraic;
-method = 3;
+method = 'Constrained';
 
 I = eye(differential);
 E = zeros(algebraic + differential);
@@ -26,6 +25,7 @@ v2_arg = normalizematrix(v2_subset(win,:));
 [res2, vec2] = id_contig(A, E, method, d2_subset, v2_arg, win);
 
 disp('Dot Product of Fitted and Real eigenvector:');
-disp(abs(vec2(:,1)'*v2(:,1)/norm(v2(:,1))));
+disp(abs(vec2'*normalizematrix(v2_subset)));
 
-cd 'unit tests'/
+plot_eigvecs(normalizematrix(v2_subset),vec2);
+

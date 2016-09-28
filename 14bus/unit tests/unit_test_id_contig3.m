@@ -1,13 +1,12 @@
 % Checks correctness of id_contig.m
 
-cd ..;
 clear all;
 load metadata.mat
 maxfreq = .5;
 minfreq = .05;
-contignum = 1;
+contignum = 2;
 n = differential + algebraic;
-method = 3;
+method = 'OrthReg';
 win = (differential + numlines + 1):(differential + numlines + numlines);
 noise = 0;
 
@@ -35,4 +34,4 @@ evecs = normalizematrix(evecs);
 disp('Dot Product of Fitted and Real eigenvectors:');
 disp(abs(evecs_fitted'*normalizematrix(v2_subset)));
 
-cd 'unit tests'/
+plot_eigvecs(normalizematrix(v2_subset),evecs_fitted);

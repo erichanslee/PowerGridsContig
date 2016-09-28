@@ -1,8 +1,7 @@
 
-function [scores, ranking, vecs, res] = run_contigtrial(fitting_method, score_method, contignum)
+function [scores, ranking, vecs, res] = run_contigtrial(fitting_method, score_method, contignum, PMUidx)
 
 load metadata.mat
-PMUidx = 1:numbuses;
 noise = 0;
 
 %   Load data
